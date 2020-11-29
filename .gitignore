@@ -344,3 +344,7 @@ healthchecksdb
 
 # Ignores cached venv
 QuerosEnv
+
+# Ignores visual studio project stuff
+*.sln
+*.pyproj
