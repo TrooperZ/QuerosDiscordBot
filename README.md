@@ -12,11 +12,7 @@ Queros comes equipped with basic commands for moderation. It has temp banning, t
 
 To temp ban, run u.ban @user reason time unit_of_time (u.ban @user reason 1 hr) and the acceptable times are sec, min, hr, day, wk, mo, yr.
 
-Queros has a built in anti-curse filter that can help with misbehaving people with 4 levels:
-- Off: No profanity checking
-- Low: No slurs allowed
-- Med: No harsh profanity
-- Strict: Anything considered profanity is blocked
+Queros has a built in anti-curse filter that can help with misbehaving people.
 
 Queros has an toggleble channel and command feature to restrict some channels and commands from being used. 
 
