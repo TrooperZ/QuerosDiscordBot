@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{2eee25cb-9b3f-4718-9f47-0fe9dadac616}</ProjectGuid>
+    <ProjectGuid>{28e06bc2-62fc-4ce0-ab7c-445897ddb47e}</ProjectGuid>
     <ProjectHome />
     <StartupFile>bot.py</StartupFile>
     <SearchPath />
@@ -19,17 +19,8 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include=".env" />
-    <Content Include=".gitattributes" />
-    <Content Include=".gitignore" />
-    <Content Include="application.yml" />
-    <Content Include="Aptfile" />
-    <Content Include="joinmsg.mp3" />
-    <Content Include="Lavalink.jar" />
     <Content Include="pog1.gif" />
     <Content Include="pog2.gif" />
-    <Content Include="Procfile" />
-    <Content Include="README.md" />
     <Content Include="requirements.txt" />
   </ItemGroup>
   <ItemGroup>

@@ -338,3 +338,9 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+
+# Ignores environment vars
+*.env
+
+# Ignores cached venv
+QuerosEnv
