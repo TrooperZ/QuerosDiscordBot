@@ -10,6 +10,17 @@
 *.userosscache
 *.sln.docstates
 
+# Ignores environment vars
+*.env
+.env
+
+# Ignores cached venv
+QuerosEnv
+
+# Ignores visual studio project stuff
+*.sln
+*.pyproj
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
@@ -338,13 +349,3 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
-
-# Ignores environment vars
-*.env
-
-# Ignores cached venv
-QuerosEnv
-
-# Ignores visual studio project stuff
-*.sln
-*.pyproj
