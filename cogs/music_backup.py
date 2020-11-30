@@ -1,3 +1,6 @@
+# This is the old music infrastructure I used. This will be there just in case the new one is broken. 
+
+
 import sys
 import os
 import discord
