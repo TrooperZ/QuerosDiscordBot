@@ -15,7 +15,7 @@
 .env
 
 # Ignores cached venv
-QuerosEnv
+QuerosEnv/
 
 # Ignores visual studio project stuff
 *.sln
