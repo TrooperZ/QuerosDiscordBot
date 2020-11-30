@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 # bot.py
+# Note: this code is designed for a Visual Studio virtual environment. Exclude the load_dotenv() for non venv.
+
 import os
 import discord
 from discord.ext import commands
