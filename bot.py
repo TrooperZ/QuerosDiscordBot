@@ -158,9 +158,9 @@ async def on_message(message):
         except UnboundLocalError:
                 coinflip123 = random.randint(1,2)
                 if coinflip123 == 1:
-                    await message.channel.send(file=discord.File('pog1.gif'))
+                    await message.channel.send(file=discord.File('pogGifs/pog1.gif'))
                 if coinflip123 == 2:
-                   await message.channel.send(file=discord.File('pog2.gif'))
+                   await message.channel.send(file=discord.File('pogGifs/pog2.gif'))
                 return
 
 
