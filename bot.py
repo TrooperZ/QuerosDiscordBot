@@ -39,7 +39,7 @@ configcol = mydb["configs"]
 modcol = mydb["moderation"]
 
 
-initial_extensions = ['cogs.utillity', 'cogs.fun', 'cogs.configuration', 'cogs.moderation', 'cogs.economy', 'cogs.music_newtest']
+initial_extensions = ['cogs.utillity', 'cogs.fun', 'cogs.configuration', 'cogs.moderation', 'cogs.economy', 'cogs.music']
 
 intervals = (
     ('weeks', 604800),  # 60 * 60 * 24 * 7

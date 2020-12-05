@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import wavelink
 import asyncio
+import random
 import asyncio
 import sys
 import re
@@ -45,6 +46,7 @@ class Queue():
         for x in range(amount):
             self.queue.pop(0)
             self.requestlist.pop(0)
+
     def remove(self, position=1):
         self.queue.pop(position)
         self.requestlist.pop(position)
@@ -63,6 +65,22 @@ class Queue():
 
     def latestQueueUser(self):
         return self.requestlist[0]
+
+    def getSongData(self, position=0):
+        return self.queue[position]
+
+    def shuffle(self):
+        firstQueue = self.queue[0]
+        firstRequest = self.requestlist[0]
+        queuetail = self.queue[1:]
+        requesttail = self.requestlist[1:]
+        zipList = list(zip(queuetail, requesttail))
+        random.shuffle(zipList)
+        self.queue, self.requestlist = map(list,zip(*zipList))
+        self.queue.insert(0, firstQueue)
+        self.requestlist.insert(0, firstRequest)
+        print(self.requestlist)
+
 
 class songdata(commands.Cog):
     def __init__(self, bot):
@@ -125,7 +143,6 @@ class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-
     @commands.Cog.listener()
     async def on_ready(self):
         await self.bot.wait_until_ready()
@@ -142,10 +159,9 @@ class Music(commands.Cog):
     @commands.command()
     async def join(self, ctx):
         """Join the users current voice channel."""
-        try:
-            channel = ctx.author.voice.channel
-        except AttributeError:
+        if ctx.author.voice == None:
             await ctx.send("Join a VC, **NOW!**")
+            return
         player = self.bot.wavelink.get_player(ctx.guild.id)
         _ = await self.bot.QueueSystem.newchannel(ctx.guild.id, channel)
         await ctx.send(f':signal_strength: Connecting to **{channel.name}**')
@@ -154,11 +170,9 @@ class Music(commands.Cog):
     @commands.command(aliases=['nowplaying'])
     async def now(self, ctx):
         """Displays the current song that is playing"""
-        try:
-            channel = ctx.author.voice.channel
-        except AttributeError:
+        if ctx.author.voice == None:
             await ctx.send("Join a VC, **NOW!**")
-
+            return
         queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
         song = queue.latest()
         requester = queue.latestQueueUser()
@@ -188,9 +202,12 @@ class Music(commands.Cog):
         await ctx.send(f':signal_strength: Connecting to **{channel.name}**')
         await player.connect(channel.id)
         
-    @commands.command(aliases=["quit"])
+    @commands.command(aliases=["quit", "disconnect"])
     async def leave(self, ctx):
         """Leave the bots current voice channel."""
+        if ctx.author.voice == None:
+            await ctx.send("Join a VC, **NOW!**")
+            return
         try:
             queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
             queue.clear()
@@ -201,10 +218,13 @@ class Music(commands.Cog):
         except Exception as e:
             print(e)
 
-    @commands.command(aliases=["emptyqueue"])
+    @commands.command(aliases=["emptyqueue", "clearq", "emptyq"])
     @commands.has_permissions(manage_channels=True)
-    async def clear(self, ctx):
+    async def clearqueue(self, ctx):
         """Clears the queue for the bot."""
+        if ctx.author.voice == None:
+            await ctx.send("Join a VC, **NOW!**")
+            return
         try:
             queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
             queue.clear()
@@ -215,6 +235,9 @@ class Music(commands.Cog):
     @commands.command()
     async def loop(self, ctx):
         """Loops the queue one time once it ends."""
+        if ctx.author.voice == None:
+            await ctx.send("Join a VC, **NOW!**")
+            return
         queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
         data = queue.data()[:]
         try:
@@ -229,6 +252,9 @@ class Music(commands.Cog):
     @commands.command(aliases=['vol'])
     async def volume(self, ctx, *, volume: int):
         """Set the volume. Volume above 100 causes earrape."""
+        if ctx.author.voice == None:
+            await ctx.send("Join a VC, **NOW!**")
+            return
         player = self.bot.wavelink.get_player(ctx.guild.id)
         if volume > 100:
             await ctx.send(":warning: ***WARNING: VOLUME ABOVE 100 CAUSES AUDIO QUALITY DROP!!!*** :warning:")
@@ -283,6 +309,9 @@ class Music(commands.Cog):
     @commands.command()
     async def skip(self, ctx):
         """Skip the currently playing song."""
+        if ctx.author.voice == None:
+            await ctx.send("Join a VC, **NOW!**")
+            return
         queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
         song = queue.data()[1]
         player = self.bot.wavelink.get_player(ctx.guild.id)
@@ -291,14 +320,37 @@ class Music(commands.Cog):
         await player.stop()
 
     @commands.command()
+    async def shuffle(self, ctx):
+        """Mixes up the songs in the queue"""
+        if ctx.author.voice == None:
+            await ctx.send("Join a VC, **NOW!**")
+            return
+        queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
+        player = self.bot.wavelink.get_player(ctx.guild.id)
+        queue.shuffle()
+        await ctx.send(":twisted_rightwards_arrows: Shuffling queue...")
+
+    @commands.command()
     async def remove(self, ctx, pos: int):
         """Removes a song from the specified position."""
-
-        
+        if ctx.author.voice == None:
+            await ctx.send("Join a VC, **NOW!**")
+            return
+        try: 
+           queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
+           song = queue.getSongData(pos)
+           queue.remove(pos)
+           await ctx.send(f":wastebasket: Removed: `{song.title}` from the queue.")
+        except IndexError:
+            await ctx.send("Please specify a vaild position in the queue.")
+            return      
         
     @commands.command(aliases=["resume", "unpause"])
     async def pause(self, ctx):
         """Pause or resume the music player."""
+        if ctx.author.voice == None:
+            await ctx.send("Join a VC, **NOW!**")
+            return
         queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
         song = queue.latest()
         player = self.bot.wavelink.get_player(ctx.guild.id)
@@ -312,6 +364,9 @@ class Music(commands.Cog):
     @commands.command()
     async def queue(self, ctx):
         """Gets the queue of the songs."""
+        if ctx.author.voice == None:
+            await ctx.send("Join a VC, **NOW!**")
+            return
         queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
         embed = discord.Embed(title=f":musical_note: {ctx.guild.name}'s queue", description="** **", color=0x6bd5ff)
         y = 0
@@ -324,8 +379,8 @@ class Music(commands.Cog):
             elif x.is_stream == False:
                 durationTrack = datetime.timedelta(milliseconds=int(x.length))
             if y == 1:
-                position = "Now Playing"
-            elif y > 1:
+                continue
+            if y > 1:
                 position = y - 1
             embed.add_field(name=f"*{str(position)}* | {x.title}", value=f"Length: {durationTrack}\nRequested By: {user.mention}", inline=False)
             if y == 10:

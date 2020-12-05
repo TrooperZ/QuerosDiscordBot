@@ -1,12 +1,13 @@
 import pymongo
 import discord
 from discord.ext import commands
+from discord.ext import tasks
 import sys
 import os
+import random
 from dotenv import load_dotenv
 
 load_dotenv()
-
 
 MONGO_PASS = os.getenv('MONGO_PASS')
 myclient = pymongo.MongoClient("mongodb+srv://queroscode:" + MONGO_PASS + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority")
@@ -16,23 +17,38 @@ configcol = mydb["configs"]
 balcol = mydb['balances']
 
 class Configuration(commands.Cog):
-	@commands.command()
-	@commands.has_permissions(manage_guild=True)
-	async def curse_filter(self, ctx, level: str):
-		"""Profanity filter. Toggle on or off"""
-		if level.lower() not in ('off', 'on'):
-			await ctx.send("Please choose a valid level")
-			return
-		server = ctx.message.guild.id
-		try:
-			configcol.update_one({"$and": [{"guild": server}, {"cfg_type": 'profanity'}]}, {"$set":{'cfg_type':'profanity', 'guild':server, 'level':level.lower()}}, upsert=True)
-		except Exception as e:
-			print(e)
-		await ctx.send("Profanity filter level set to: **" + level.lower() + "**")
+	"""Configure bot server settings"""
 
 	@commands.command()
 	@commands.has_permissions(manage_guild=True)
-	async def toggle_pog(self, ctx, yN: str):
+	async def cursefilter(self, ctx, mode: str, level: str=None):
+		"""Profanity filter. Toggle on or off"""
+		if mode.lower() not in ('toggle', 'whitelist', 'blacklist', 'clear'):
+			await ctx.send("Choose a valid mode: toggle, whitelist, blacklist, or clear")
+			return
+		if mode.lower() == 'toggle':
+			if level.lower() not in ('off', 'on'):
+				await ctx.send("Please choose a valid level, on or off.")
+				return
+			server = ctx.message.guild.id
+			try:
+				configcol.update_one({"$and": [{"guild": server}, {"cfg_type": 'profanity'}]}, {"$set":{'cfg_type':'profanity', 'guild':server, 'level':level.lower()}}, upsert=True)
+			except Exception as e:
+				print(e)
+			await ctx.send("Profanity filter level set to: **" + level.lower() + "**")
+
+		if mode.lower == 'whitelist':
+			await ctx.send("This is currently in development.")
+
+		if mode.lower == 'blacklist':
+			await ctx.send("This is currently in development.")
+
+		if mode.lower == 'clear':
+			await ctx.send("This is currently in development.")
+
+	@commands.command()
+	@commands.has_permissions(manage_guild=True)
+	async def togglepog(self, ctx, yN: str):
 		"""Toggles the pog gifs if pog is in a message"""
 		if yN not in ('on', 'off'):
 			await ctx.send("Please choose a valid level, on or off.")
@@ -51,6 +67,7 @@ class Configuration(commands.Cog):
 		if yN not in ('on', 'off'):
 			await ctx.send("Please choose a valid level, on or off.")
 			return
+
 		if yN == 'off':
 			logging = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 			listcmd = []
@@ -94,12 +111,35 @@ class Configuration(commands.Cog):
 			configcol.update_one({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]}, {"$set":{'cfg_type':'channeloff', 'guild':ctx.guild.id, 'channels':channels}}, upsert=True)
 			await ctx.send(f"Removed **{channel}** from off list.")
 
-	@commands.command()
-	@commands.has_permissions(manage_guild=True)
-	async def startticketing(self, ctx, channel: discord.TextChannel):
-		"""Select a channel for the ticket function (broken rn)"""
-		mainmsg = await channel.send("To create a ticket for help with moderators, react with :ticket:")
-		await mainmsg.add_reaction("\U0001f3ab")
+	#@commands.command()
+	#@commands.has_permissions(manage_guild=True)
+	#async def startticketing(self, ctx, channeltick: discord.TextChannel):
+	#	"""Select a channel for the ticket function (broken rn)"""
+	#	mainmsg = await channeltick.send("To create a ticket for help with moderators, react with :ticket:")
+	#	await mainmsg.add_reaction("\U0001f3ab")
+	#	configcol.update_one({"$and": [{"guild": ctx.guild}, {"cfg_type": 'ticketchannel'}]}, {"$set":{'cfg_type':'ticketchannel', 'guild':ctx.guild.id, 'msg':mainmsg.id, 'channel':channeltick.id}}, upsert=True)
+
+	#@tasks.loop(seconds=5)
+	#async def ticketManager(self):
+	#	channel = configcol.find({"cfg_type": 'ticketchannel'})
+	#	for i in channel:
+	#		ticketmsg = channel['msg']
+	#		channelID= channel['channeltick']
+			
+	#		server = channel['guild']
+	#		reaction = await bot.wait_for_reaction(emoji="🎫", message=ticketmsg)
+	#		ticketID = random.randint(1, 100000)
+	#		overwrites = {
+	#				guild.default_role: discord.PermissionOverwrite(read_messages=False),
+	#				guild.me: discord.PermissionOverwrite(read_messages=True),
+	#				guild.get_member(reaction.author.id): discord.PermissionOverwrite(read_messages=True)
+	#			}	
+	#		await server.create_text_channel(f'ticket-{str(ticketID)}', overwrites=overwrites)
+
+	#@commands.Cog.listener()
+	#async def on_ready(self):
+		#self.ticketManager.start()
+
 
 
 #setups command.  command is needed, make sure to use cogs.[name of file]

@@ -353,4 +353,4 @@ class Moderation(commands.Cog):
         await ctx.send(f"Deleted item `{delid}` from {user.mention}'s history.")
 
 def setup(bot):
-	bot.add_cog(Moderation(bot))
+    bot.add_cog(Moderation(bot))
