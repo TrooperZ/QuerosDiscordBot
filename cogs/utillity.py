@@ -19,6 +19,7 @@ import yfinance as yf
 import matplotlib.pyplot as plt 
 from yahoo_fin import stock_info as si
 import pymongo
+import logging
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -29,8 +30,14 @@ mydb = myclient["data"]
 configcol = mydb["configs"]
 
 bot_launch_time = datetime.datetime.now() #bot launch time for uptime command
+
+for handler in logging.root.handlers[:]:
+	logging.root.removeHandler(handler)
+
+logging.basicConfig(filename='app.log', filemode='w', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
 class Utillity(commands.Cog):
-	#General commands that can help you with things.
+	"""General commands that can help you with things."""
 
 	def __init__(self, bot):
 		#Initalizes bot.
@@ -41,21 +48,32 @@ class Utillity(commands.Cog):
 	async def stonks(self, ctx, stock: str, time='1d'):
 		"""Grabs stock info for a ticker of your choice. 
 		Choose from 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, and max"""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-		cmdsList = ['0']
-
-		for i in cmds:
-			cmdOff = i['commands']
-			cmdsList.extend(cmdOff)
-
-		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-		for i in channels:
-			channeloff = i['channels']
-			channelList.extend(channeloff)
-		if 'stonks' in cmdsList:
-			return
 		try:
+			cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+			cmdsList = ['0']
+
+			for i in cmds:
+				cmdOff = i['commands']
+				cmdsList.extend(cmdOff)
+
+			channelList = ['0']
+			channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+			for i in channels:
+				channeloff = i['channels']
+				channelList.extend(channeloff)
+			if 'stonks' in cmdsList:
+				return
+
+			channelList = ['0']
+			channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+	
+			for i in channels:
+				channeloff = i['channels']
+				channelList.extend(channeloff)
+
+			if ctx.message.channel.id in channelList:
+				return
+		
 			await ctx.channel.trigger_typing()
 
 			if time not in ('1d','5d','1mo','3mo','6mo','1y','2y','5y','10y','ytd','max'):
@@ -98,47 +116,48 @@ class Utillity(commands.Cog):
 		except Exception as e:
 			await ctx.send("Hmm, thats odd. The command errored out. Please try again, or with different arguments and report it on the support server.")
 			await ctx.send("Error: " + str(e))
-			raise Exception
+			logging.exception(f"Excecutor: {ctx.message.author.name}", exc_info=True)
 
 	@commands.command()
 	@commands.cooldown(rate=1, per=1.0, type=commands.BucketType.user)
 	async def uptime(self, ctx): #Uptime provides how long the bot is running.  Periodic restarts are reccomended.
 		"""Bot uptime."""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-		cmdsList = ['0']
-		for i in cmds:
-			cmdOff = i['commands']
-			cmdsList.extend(cmdOff)
-		if 'uptime' in cmdsList:
-			return
-		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		try:
+			cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+			cmdsList = ['0']
+			for i in cmds:
+				cmdOff = i['commands']
+				cmdsList.extend(cmdOff)
+			if 'uptime' in cmdsList:
+				return
+			channelList = ['0']
+			channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
-		for i in channels:
-			channeloff = i['channels']
-			channelList.extend(channeloff)
+			for i in channels:
+				channeloff = i['channels']
+				channelList.extend(channeloff)
 
-		if ctx.message.channel.id in channelList:
-			return
+			if ctx.message.channel.id in channelList:
+				return
 
-		try: 
-		
 			delta_uptime = datetime.datetime.now() - bot_launch_time 
 			hours, remainder = divmod(int(delta_uptime.total_seconds()), 3600)
 			minutes, seconds = divmod(remainder, 60)
 			days, hours = divmod(hours, 24)
 
 			await ctx.send(f"{days}d, {hours}h, {minutes}m, {seconds}s")
+			return
 
 		except Exception as e:
 			await ctx.send("Hmm, thats odd. The command errored out. Please try again, or with different arguments and report it on the support server.")
 			await ctx.send("Error: " + str(e))
+			logging.exception(f"Excecutor: {ctx.message.author.name}", exc_info=True)
 
 	@commands.command()
 	@commands.cooldown(rate=1, per=2.0, type=commands.BucketType.user)
 	async def raninteger(self, ctx, num1:int, num2:int):  #Generates a random number within 2 integers.
 		"""Gives a random integer within two predefined integers.
-		Example: u.translate 2 9""" 
+		Example: u.raninteger 2 9""" 
 		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
@@ -166,6 +185,7 @@ class Utillity(commands.Cog):
 		except Exception as e:
 			await ctx.send("Hmm, thats odd. The command errored out. Please try again, or with different arguments and report it on the support server.")
 			await ctx.send("Error: " + str(e))
+			logging.exception(f"Excecutor: {ctx.message.author.name}", exc_info=True)
 
 	@commands.command()
 	@commands.cooldown(rate=1, per=6.0, type=commands.BucketType.user)
@@ -173,40 +193,41 @@ class Utillity(commands.Cog):
 		"""Searches something on google.
 		Example: u.search How to make pizza"""
 		#embed stuff
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-		cmdsList = ['0']
-		for i in cmds:
-			cmdOff = i['commands']
-			cmdsList.extend(cmdOff)
-		if 'gsearch' in cmdsList:
-			return
-		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-		for i in channels:
-			channeloff = i['channels']
-			channelList.extend(channeloff)
-
-		if ctx.message.channel.id in channelList:
-			return
-
-		await ctx.channel.trigger_typing()
-		embed = discord.Embed(title="Results for: *" + searchQ + "*", color=0x5ec1ff)
-		embed.set_author(name="Google Search")
-
-		try: 
-				for j in search(str(searchQ), num=3, stop=3, pause=1):
-						req = urllib.request.Request(j)
-						req.add_header('User-Agent', 'Mozilla/5.0')
-						soup = BeautifulSoup(urllib.request.urlopen(req))
-						embed.add_field(name=soup.title.string, value=j, inline=False)
-	
-				await ctx.send(embed=embed)
+		try:
+			cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+			cmdsList = ['0']
+			for i in cmds:
+				cmdOff = i['commands']
+				cmdsList.extend(cmdOff)
+			if 'gsearch' in cmdsList:
 				return
+			channelList = ['0']
+			channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+
+			for i in channels:
+				channeloff = i['channels']
+				channelList.extend(channeloff)
+
+			if ctx.message.channel.id in channelList:
+				return
+
+			await ctx.channel.trigger_typing()
+			embed = discord.Embed(title="Results for: *" + searchQ + "*", color=0x5ec1ff)
+			embed.set_author(name="Google Search")
+
+			for j in search(str(searchQ), num=3, stop=3, pause=1):
+					req = urllib.request.Request(j)
+					req.add_header('User-Agent', 'Mozilla/5.0')
+					soup = BeautifulSoup(urllib.request.urlopen(req))
+					embed.add_field(name=soup.title.string, value=j, inline=False)
+	
+			await ctx.send(embed=embed)
+			return
 
 		except Exception as e:
 				await ctx.send("Hmm, thats odd. The command errored out. Please try again with different arguments and report it on the support server if it continues.")
 				await ctx.send("Error: " + str(e))
+				logging.exception(f"Excecutor: {ctx.message.author.name}", exc_info=True)
 
 	@commands.command()
 	@commands.cooldown(rate=1, per=5.0, type=commands.BucketType.user)
@@ -217,25 +238,25 @@ class Utillity(commands.Cog):
 		u.translate "je suis faim" spanish (toLang is specified and translates to Spanish)
 		u.translate "no habla espanol" spanish french (fromLang and toLang are specified and it does the translation)
 		"""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-		cmdsList = ['0']
-		for i in cmds:
-			cmdOff = i['commands']
-			cmdsList.extend(cmdOff)
-		if 'translate' in cmdsList:
-			return
-
-		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-		for i in channels:
-			channeloff = i['channels']
-			channelList.extend(channeloff)
-
-		if ctx.message.channel.id in channelList:
-			return
-		await ctx.channel.trigger_typing()
 		try: 
+			cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+			cmdsList = ['0']
+			for i in cmds:
+				cmdOff = i['commands']
+				cmdsList.extend(cmdOff)
+			if 'translate' in cmdsList:
+				return
+
+			channelList = ['0']
+			channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+
+			for i in channels:
+				channeloff = i['channels']
+				channelList.extend(channeloff)
+
+			if ctx.message.channel.id in channelList:
+				return
+			await ctx.channel.trigger_typing() 
 			translator = Translator() #generates translator item
 
 			conversionKey = googletrans.LANGUAGES #grabs lang codes to physical languages
@@ -297,6 +318,7 @@ class Utillity(commands.Cog):
 		except Exception as e:
 			await ctx.send("Hmm, thats odd. The command errored out. Please try again, or with different arguments and report it on the support server.")
 			await ctx.send("Error: " + str(e))
+			logging.exception(f"Excecutor: {ctx.message.author.name}", exc_info=True)
 
 	@commands.command(aliases=['calculate', 'calculator'])
 	@commands.cooldown(rate=1, per=1.0, type=commands.BucketType.user)
@@ -341,6 +363,7 @@ class Utillity(commands.Cog):
 		except Exception as e:
 			await ctx.send("Hmm, thats odd. The command errored out. Please try again, or with different arguments and report it on the support server.")
 			await ctx.send("Error: " + str(e))
+			logging.exception(f"Excecutor: {ctx.message.author.name}", exc_info=True)
 
 	@commands.command()
 	@commands.cooldown(rate=1, per=5, type=commands.BucketType.user)

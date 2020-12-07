@@ -17,6 +17,7 @@ mydb = myclient["data"]
 modcol = mydb["moderation"]
 
 class Moderation(commands.Cog):
+    """Moderation Commands"""
     def __init__(self, bot):
         self.bot = bot
 

@@ -15,7 +15,7 @@ from discord.ext import commands
 import pymongo
 import PIL.Image
 import deeppyer
-#from wand.image import Image 
+from wand.image import Image 
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -105,34 +105,34 @@ class Fun(commands.Cog):
 			pic = discord.File('fryer.png')
 			await ctx.send(file=pic)
 
-	#@commands.command()
-	#@commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
-	#async def waveify(self, ctx, height = 32, width = 4): 
-	#	"""Adds wave effect to an image, must put command with uploaded image"""
-	#	cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-	#	cmdsList = ['0']
-	#	for i in cmds:
-	#		cmdOff = i['commands']
-	#		cmdsList.extend(cmdOff)
-	#	if 'deepfryuser' in cmdsList:
-	#		return
+	@commands.command()
+	@commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
+	async def waveify(self, ctx, height = 32, width = 4): 
+		"""Adds wave effect to an image, must put command with uploaded image"""
+		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmdsList = ['0']
+		for i in cmds:
+			cmdOff = i['commands']
+			cmdsList.extend(cmdOff)
+		if 'deepfryuser' in cmdsList:
+			return
 
-	#	channelList = ['0']
-	#	channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		channelList = ['0']
+		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
-	#	for i in channels:
-	#		channeloff = i['channels']
-	#		channelList.extend(channeloff)
+		for i in channels:
+			channeloff = i['channels']
+			channelList.extend(channeloff)
 
-	#	if ctx.message.channel.id in channelList:
-	#		return
-	#	for attachment in ctx.message.attachments:
-	#		await attachment.save("wavetargetimg.png")
-	#		with Image(filename ="wavetargetimg.png") as img:
-	#					img.wave(amplitude = img.height / height, wave_length = img.width / width) 
-	#					img.save(filename ="wavedimg.png") 
-	#		pic = discord.File('wavedimg.png')
-	#		await ctx.send(file=pic)
+		if ctx.message.channel.id in channelList:
+			return
+		for attachment in ctx.message.attachments:
+			await attachment.save("wavetargetimg.png")
+			with Image(filename ="wavetargetimg.png") as img:
+						img.wave(amplitude = img.height / height, wave_length = img.width / width) 
+						img.save(filename ="wavedimg.png") 
+			pic = discord.File('wavedimg.png')
+			await ctx.send(file=pic)
 		
 
 	@commands.command()
