@@ -434,6 +434,11 @@ class Utillity(commands.Cog):
 		embed.add_field(name="Version", value="v0.0.1", inline=True)
 		await ctx.send(embed=embed)
 
+
+	@commands.command()
+	async def botdonate(self, ctx):
+		"""How to donate to bot?"""
+		await ctx.send("You can donate via Monero (XMR) or via Ethereum (ETH) cryptocurrency\nXMR: 454KvhmqG7jKkf5LQ4zWbKdfN9iCW3fKuZbzz546i6PHDFJPvrNLKvP3oUqBPwBEWEP2YPvLACmorVp9KeqRRW5HShzrzBM\nETH: 0x7dce61d6b52c83a0c0d125787e081a841c52f2b4")
 #setups command.  command is needed, make sure to use cogs.[name of file]
 def setup(bot):
 	bot.add_cog(Utillity(bot))
