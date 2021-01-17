@@ -34,4 +34,4 @@ Note: For loop, shuffle, and the override commands, you need Manage Server perms
 
 **Have any questions?**
 
-Dm me on Discord (Trooper Z#7824) or join the support server [here](https://discord.gg/7qvsUCBZ8W).
+Dm me on Discord (MagRevolver#7824) or join the support server [here](https://discord.gg/7qvsUCBZ8W).
