@@ -431,7 +431,7 @@ class Utillity(commands.Cog):
 		embed.add_field(name="Total Users", value=str(len(self.bot.users)), inline=True)
 		embed.add_field(name="Total Servers", value=str(len(self.bot.guilds)), inline=True)
 		embed.add_field(name="Language Used", value="Python, using discord.py", inline=True)
-		embed.add_field(name="Version", value="v1.0.0", inline=True)
+		embed.add_field(name="Version", value="v0.0.1", inline=True)
 		await ctx.send(embed=embed)
 
 #setups command.  command is needed, make sure to use cogs.[name of file]

@@ -537,7 +537,7 @@ class Music(commands.Cog):
 
     @commands.command(aliases=['eq'], name="equalizer (<:silverstar11:794770265657442347> Qu+ Server)")
     @disabledCmd_check()
-    @premiumUser()
+    #@premiumUser()
     async def equalizer(self, ctx, type:str):
         """Sets the equalizer for the player.
         flat = Resets your EQ to Flat (resets it)
@@ -645,7 +645,7 @@ class Music(commands.Cog):
     
     @commands.command(aliases=['vol'], name="volume (<:silverstar1:794770265657442347> Qu+ Server)")
     @disabledCmd_check()
-    @premiumUser()
+    #@premiumUser()
     async def volume(self, ctx, *, volume: int):
         """Set the volume. Volume above 100 causes earrape."""
         if ctx.author.voice == None:
@@ -699,7 +699,10 @@ class Music(commands.Cog):
         channel = await self.bot.QueueSystem.get_channel(ctx.guild.id)
 
         while True:
-            song = queue.latest()
+            try:
+                song = queue.latest()
+            except:
+                song = None
 
             if song == None:
                 return

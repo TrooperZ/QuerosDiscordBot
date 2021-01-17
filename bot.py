@@ -36,6 +36,7 @@ myclient = pymongo.MongoClient("mongodb+srv://queroscode:" + MONGO_PASS + "@quer
 mydb = myclient["data"]
 configcol = mydb["configs"]
 modcol = mydb["moderation"]
+premServercol = mydb["vipServers"]
 
 
 initial_extensions = ['cogs.utillity', 'cogs.fun', 'cogs.configuration', 'cogs.moderation', 'cogs.economy', 'cogs.music']
@@ -64,42 +65,25 @@ intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='u.', intents=intents, help_command=PrettyHelp())
 bot.help_command = PrettyHelp(color=0x6bd5ff, active=60, verify_checks=False)
 bot.wavelink = wavelink.Client(bot=bot)
-#profanity.load_censor_words(whitelist_words=['ass', 'asses', 'gay', 'homosexual', 'lesbian', 'dick', 'homo',
-#                                       '4r5e', 'areole', 'cawk' 'cow girl', 'cow girls',
-#                                       'cowgirl', 'cowgirls', 'crap', 'butthole', 'crotch',
-#                                       'damn', 'dick', 'dong', 'doofus', 'dopey', 'doosh',
-#                                       'drunk','dummy','dumass', 'dumbass', 'dumbasses',
-#                                       'enlargement', 'f4nny', 'facial', 'fanny', 'fart', 
-#                                       'fat', 'flange', 'fondle', 'foobar', 'freex', 'frigg',
-#                                       'fubar', 'gae', 'gai', 'gaylord', 'gays', 'gey', 'ghay',
-#                                       'ghey', 'god', 'gtfo', 'guido', 'h0m0', 'h0mo', 'hardon', 
-#                                       'he11', 'hell', 'hebe', 'heeb', 'hemp', 'hentai', 'heroin', 
-#                                       'herp', 'herpes', 'herpy', 'heshe', 'hoar', 'hom0', 'homey',
-#                                       'homo', 'hookah', 'hooch', 'hootch', 'howtokill', 'howtomurdep',
-#                                       'hump', 'humped', 'humping', 'incest', 'jerk', 'junkie', 'junky',
-#                                       'kill', 'knob', 'kraut', 'LEN', 'leper', 'lesbians', 'lesbo', 
-#                                       'lesbos', 'lez', 'lezbian', 'lesbos', 'lezbos', 'lezbians', 'lezzie', 
-#                                       'lezzies', 'lezzy', 'lmao', 'lmfao', 'loin', 'loins', 'lube', 'maxi',
-#                                       'menses', 'menstruate', 'menstruation', 'molest', 'moron', 'muff', 'murder',
-#                                       'mutha', 'muther', 'nad', 'nads', 'naked', 'napalm', 'nappy', 'nazi', 'nipple',
-#                                       'nipples', 'nob', 'nobs', 'nude', 'nudes', 'nutbutter', 'omg', 'opium', 'opiate', 
-#                                       'oral', 'orally', 'organ', 'ovary', 'ovum', 'ovums', 'paddy', 'pantie', 'panties',
-#                                       'panty', 'pasty', 'pastie', 'pawn', 'pcp', 'pedo', 'pedophilia', 'pedophile', 
-#                                       'pee', 'peepee', 'penetrate', 'penetration', 'penis', 'peyote', 'piss', 'piss-off', 
-#                                       'pissed', 'pissing', 'pissin', 'pissoff', 'pms', 'pollock', 'poop', 'pornography',
-#                                       'pot', 'potty', 'prick', 'pricks', 'pron', 'punky', 'puss', 'quicky', 'queer', 
-#                                       'queers', 'rape', 'rapist', 'raped', 'rectal', 'rectum', 'reich', 'revue', 'ritard', 
-#                                       'rum', 'rump', 'pube', 'pubic', 'ruski', 's0b', 's-o-b', 's.o.b.', 'sandbar', 'scag', 
-#                                       'scantily', 'schizo', 'schlong', 'screwed', 'screw', 'screwing', 'scroat', 'scrot', 
-#                                       'scrotum', 'scrud', 'scum', 'seaman', 'seamen', 'seduce', 'sexual', 'shag', 'skag', 
-#                                       'skank', 'slave', 'slope', 'smut', 'smutty', 'snatch', 'sniper', 'snuff', 'sodom', 
-#                                       'souse', 'soused', 'spac', 'spunk', 'steamy', 'stfu', 'stiffy', 'stoned', 'strip', 
-#                                       'stroke', 'stupid', 'suck', 'sucked', 'sucking', 'tampon', 'tawdry', 'teabagging', 
-#                                       'testee', 'testicle', 'thrust', 'thug', 'tinkle', 'toke', 'transsexual', 
-#                                       'tramp', 'trashy', 'tw4t', 'twat', 'ugly', 'undies', 'unwed', 'urinal', 'urine', 
-#                                       'uterus', 'uzi', 'viagra', 'vagina', 'virgin', 'valium', 'vixen', 'vodka', 'vomit',
-#                                       'vulgar', 'wad', 'wedgie', 'weed', 'weewee', 'weenie', 'weiner', 'weirdo', 'willy', 
-#                                       'willies', 'womb', 'woody', 'wtf'])
+#profanity.load_censor_words(whitelist_words=
+
+@bot.command(hidden=True)
+async def addpremiumserver(ctx, serverid: int):
+    owner = await bot.fetch_user(390841378277425153)
+    if ctx.author != owner:
+        return
+    premServercol.insert_one({"server":ctx.guild.id})
+    await ctx.send("done")
+    return
+
+@bot.command(hidden=True)
+async def delpremiumserver(ctx, serverid: int):
+    owner = await bot.fetch_user(390841378277425153)
+    if ctx.author != owner:
+        return
+    premServercol.delete_one({"server":ctx.guild.id})
+    await ctx.send("done")
+    return
 
 if __name__ == '__main__':
     for extension in initial_extensions:
@@ -148,7 +132,6 @@ async def on_message(message):
                 if coinflip123 == 2:
                    await message.channel.send(file=discord.File('pogGifs/pog2.gif'))
                 return
-
 
 @bot.event 
 async def on_ready():
