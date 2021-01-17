@@ -19,32 +19,32 @@ balcol = mydb['balances']
 class Configuration(commands.Cog):
 	"""Configure bot server settings"""
 
-	@commands.command()
-	@commands.has_permissions(manage_guild=True)
-	async def cursefilter(self, ctx, mode: str, level: str=None):
-		"""Profanity filter. Toggle on or off"""
-		if mode.lower() not in ('toggle', 'whitelist', 'blacklist', 'clear'):
-			await ctx.send("Choose a valid mode: toggle, whitelist, blacklist, or clear")
-			return
-		if mode.lower() == 'toggle':
-			if level.lower() not in ('off', 'on'):
-				await ctx.send("Please choose a valid level, on or off.")
-				return
-			server = ctx.message.guild.id
-			try:
-				configcol.update_one({"$and": [{"guild": server}, {"cfg_type": 'profanity'}]}, {"$set":{'cfg_type':'profanity', 'guild':server, 'level':level.lower()}}, upsert=True)
-			except Exception as e:
-				print(e)
-			await ctx.send("Profanity filter level set to: **" + level.lower() + "**")
+	#@commands.command()
+	#@commands.has_permissions(manage_guild=True)
+	#async def cursefilter(self, ctx, mode: str, level: str=None):
+	#	"""Profanity filter. Toggle on or off"""
+	#	if mode.lower() not in ('toggle', 'whitelist', 'blacklist', 'clear'):
+	#		await ctx.send("Choose a valid mode: toggle, whitelist, blacklist, or clear")
+	#		return
+	#	if mode.lower() == 'toggle':
+	#		if level.lower() not in ('off', 'on'):
+	#			await ctx.send("Please choose a valid level, on or off.")
+	#			return
+	#		server = ctx.message.guild.id
+	#		try:
+	#			configcol.update_one({"$and": [{"guild": server}, {"cfg_type": 'profanity'}]}, {"$set":{'cfg_type':'profanity', 'guild':server, 'level':level.lower()}}, upsert=True)
+	#		except Exception as e:
+	#			print(e)
+	#		await ctx.send("Profanity filter level set to: **" + level.lower() + "**")
 
-		if mode.lower == 'whitelist':
-			await ctx.send("This is currently in development.")
+	#	if mode.lower == 'whitelist':
+	#		await ctx.send("This is currently in development.")
 
-		if mode.lower == 'blacklist':
-			await ctx.send("This is currently in development.")
+	#	if mode.lower == 'blacklist':
+	#		await ctx.send("This is currently in development.")
 
-		if mode.lower == 'clear':
-			await ctx.send("This is currently in development.")
+	#	if mode.lower == 'clear':
+	#		await ctx.send("This is currently in development.")
 
 	@commands.command()
 	@commands.has_permissions(manage_guild=True)
@@ -62,7 +62,7 @@ class Configuration(commands.Cog):
 	
 	@commands.command()
 	@commands.has_permissions(manage_guild=True)
-	async def togglecmd(self, ctx, cmd: str, yN: str):
+	async def togglecommand(self, ctx, cmd: str, yN: str):
 		"""Toggles commands, currently moderation does not have this ability."""
 		if yN not in ('on', 'off'):
 			await ctx.send("Please choose a valid level, on or off.")
@@ -110,6 +110,31 @@ class Configuration(commands.Cog):
 			channels.remove(channel.id)
 			configcol.update_one({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]}, {"$set":{'cfg_type':'channeloff', 'guild':ctx.guild.id, 'channels':channels}}, upsert=True)
 			await ctx.send(f"Removed **{channel}** from off list.")
+
+	@commands.command()
+	@commands.has_permissions(manage_guild=True)
+	async def togglecategory(self, ctx, category: str, yN: str):
+		"""Toggles which channel the bot to ignore, currently moderation does not have this ability."""
+		if yN not in ('on', 'off'):
+			await ctx.send("Please choose a valid level, on or off.")
+			return
+		if yN == 'off':
+			logging = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'categoryoff'}]})
+			categories = []
+			for i in logging:
+				cateogries.extend(i['categories'])
+			categories.append(category)
+			configcol.update_one({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'categoryoff'}]}, {"$set":{'cfg_type':'categoryoff', 'guild':ctx.guild.id, 'categories':categories}}, upsert=True)
+			await ctx.send(f"Added **{category}** to off list.")
+
+		if yN == 'on':
+			logging = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'categoryoff'}]})
+			categories = []
+			for i in logging:
+				categories.extend(i['categories'])
+			categories.remove(category)
+			configcol.update_one({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'categoryoff'}]}, {"$set":{'cfg_type':'categoryoff', 'guild':ctx.guild.id, 'categories':categories}}, upsert=True)
+			await ctx.send(f"Removed **{category}** from off list.")
 
 	#@commands.command()
 	#@commands.has_permissions(manage_guild=True)

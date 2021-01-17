@@ -397,6 +397,42 @@ class Utillity(commands.Cog):
 
 		await ctx.send("Join this server for bot support: https://discord.gg/7qvsUCBZ8W")
 
+	@commands.command()
+	@commands.cooldown(rate=1, per=5, type=commands.BucketType.user)
+	async def website(self, ctx):
+		"""Bot's website"""
+		channelList = ['0']
+		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+
+		for i in channels:
+			channeloff = i['channels']
+			channelList.extend(channeloff)
+
+		if ctx.message.channel.id in channelList:
+			return
+
+		await ctx.send("We do not have a website yet.")
+
+	@commands.command()
+	@commands.cooldown(rate=1, per=2, type=commands.BucketType.user)
+	async def botinfo(self, ctx):
+		"""General bot info"""
+		delta_uptime = datetime.datetime.now() - bot_launch_time 
+		hours, remainder = divmod(int(delta_uptime.total_seconds()), 3600)
+		minutes, seconds = divmod(remainder, 60)
+		days, hours = divmod(hours, 24)
+		
+		author = await self.bot.fetch_user(390841378277425153)
+
+		uptime = f"{days}d, {hours}h, {minutes}m, {seconds}s"
+		embed=discord.Embed(title="Queros Information", description="Info about creator and bot status")
+		embed.set_author(name=str(author), icon_url=author.avatar_url)
+		embed.add_field(name="Uptime:", value=uptime, inline=True)
+		embed.add_field(name="Total Users", value=str(len(self.bot.users)), inline=True)
+		embed.add_field(name="Total Servers", value=str(len(self.bot.guilds)), inline=True)
+		embed.add_field(name="Language Used", value="Python, using discord.py", inline=True)
+		embed.add_field(name="Version", value="v1.0.0", inline=True)
+		await ctx.send(embed=embed)
 
 #setups command.  command is needed, make sure to use cogs.[name of file]
 def setup(bot):

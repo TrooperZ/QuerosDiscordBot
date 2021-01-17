@@ -31,7 +31,6 @@ from better_profanity import profanity
 
 load_dotenv()
 
-
 MONGO_PASS = os.getenv('MONGO_PASS')
 myclient = pymongo.MongoClient("mongodb+srv://queroscode:" + MONGO_PASS + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority")
 mydb = myclient["data"]
@@ -63,81 +62,66 @@ def display_time(seconds, granularity=2):
 TOKEN = os.getenv('DISCORD_TOKEN')
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='u.', intents=intents, help_command=PrettyHelp())
-bot.help_command = PrettyHelp(color=0x6bd5ff, active=60)
+bot.help_command = PrettyHelp(color=0x6bd5ff, active=60, verify_checks=False)
 bot.wavelink = wavelink.Client(bot=bot)
-profanity.load_censor_words(whitelist_words=['ass', 'asses', 'gay', 'homosexual', 'lesbian', 'dick', 'homo',
-                                       '4r5e', 'areole', 'cawk' 'cow girl', 'cow girls',
-                                       'cowgirl', 'cowgirls', 'crap', 'butthole', 'crotch',
-                                       'damn', 'dick', 'dong', 'doofus', 'dopey', 'doosh',
-                                       'drunk','dummy','dumass', 'dumbass', 'dumbasses',
-                                       'enlargement', 'f4nny', 'facial', 'fanny', 'fart', 
-                                       'fat', 'flange', 'fondle', 'foobar', 'freex', 'frigg',
-                                       'fubar', 'gae', 'gai', 'gaylord', 'gays', 'gey', 'ghay',
-                                       'ghey', 'god', 'gtfo', 'guido', 'h0m0', 'h0mo', 'hardon', 
-                                       'he11', 'hell', 'hebe', 'heeb', 'hemp', 'hentai', 'heroin', 
-                                       'herp', 'herpes', 'herpy', 'heshe', 'hoar', 'hom0', 'homey',
-                                       'homo', 'hookah', 'hooch', 'hootch', 'howtokill', 'howtomurdep',
-                                       'hump', 'humped', 'humping', 'incest', 'jerk', 'junkie', 'junky',
-                                       'kill', 'knob', 'kraut', 'LEN', 'leper', 'lesbians', 'lesbo', 
-                                       'lesbos', 'lez', 'lezbian', 'lesbos', 'lezbos', 'lezbians', 'lezzie', 
-                                       'lezzies', 'lezzy', 'lmao', 'lmfao', 'loin', 'loins', 'lube', 'maxi',
-                                       'menses', 'menstruate', 'menstruation', 'molest', 'moron', 'muff', 'murder',
-                                       'mutha', 'muther', 'nad', 'nads', 'naked', 'napalm', 'nappy', 'nazi', 'nipple',
-                                       'nipples', 'nob', 'nobs', 'nude', 'nudes', 'nutbutter', 'omg', 'opium', 'opiate', 
-                                       'oral', 'orally', 'organ', 'ovary', 'ovum', 'ovums', 'paddy', 'pantie', 'panties',
-                                       'panty', 'pasty', 'pastie', 'pawn', 'pcp', 'pedo', 'pedophilia', 'pedophile', 
-                                       'pee', 'peepee', 'penetrate', 'penetration', 'penis', 'peyote', 'piss', 'piss-off', 
-                                       'pissed', 'pissing', 'pissin', 'pissoff', 'pms', 'pollock', 'poop', 'pornography',
-                                       'pot', 'potty', 'prick', 'pricks', 'pron', 'punky', 'puss', 'quicky', 'queer', 
-                                       'queers', 'rape', 'rapist', 'raped', 'rectal', 'rectum', 'reich', 'revue', 'ritard', 
-                                       'rum', 'rump', 'pube', 'pubic', 'ruski', 's0b', 's-o-b', 's.o.b.', 'sandbar', 'scag', 
-                                       'scantily', 'schizo', 'schlong', 'screwed', 'screw', 'screwing', 'scroat', 'scrot', 
-                                       'scrotum', 'scrud', 'scum', 'seaman', 'seamen', 'seduce', 'sexual', 'shag', 'skag', 
-                                       'skank', 'slave', 'slope', 'smut', 'smutty', 'snatch', 'sniper', 'snuff', 'sodom', 
-                                       'souse', 'soused', 'spac', 'spunk', 'steamy', 'stfu', 'stiffy', 'stoned', 'strip', 
-                                       'stroke', 'stupid', 'suck', 'sucked', 'sucking', 'tampon', 'tawdry', 'teabagging', 
-                                       'testee', 'testicle', 'thrust', 'thug', 'tinkle', 'toke', 'transsexual', 
-                                       'tramp', 'trashy', 'tw4t', 'twat', 'ugly', 'undies', 'unwed', 'urinal', 'urine', 
-                                       'uterus', 'uzi', 'viagra', 'vagina', 'virgin', 'valium', 'vixen', 'vodka', 'vomit',
-                                       'vulgar', 'wad', 'wedgie', 'weed', 'weewee', 'weenie', 'weiner', 'weirdo', 'willy', 
-                                       'willies', 'womb', 'woody', 'wtf'])
+#profanity.load_censor_words(whitelist_words=['ass', 'asses', 'gay', 'homosexual', 'lesbian', 'dick', 'homo',
+#                                       '4r5e', 'areole', 'cawk' 'cow girl', 'cow girls',
+#                                       'cowgirl', 'cowgirls', 'crap', 'butthole', 'crotch',
+#                                       'damn', 'dick', 'dong', 'doofus', 'dopey', 'doosh',
+#                                       'drunk','dummy','dumass', 'dumbass', 'dumbasses',
+#                                       'enlargement', 'f4nny', 'facial', 'fanny', 'fart', 
+#                                       'fat', 'flange', 'fondle', 'foobar', 'freex', 'frigg',
+#                                       'fubar', 'gae', 'gai', 'gaylord', 'gays', 'gey', 'ghay',
+#                                       'ghey', 'god', 'gtfo', 'guido', 'h0m0', 'h0mo', 'hardon', 
+#                                       'he11', 'hell', 'hebe', 'heeb', 'hemp', 'hentai', 'heroin', 
+#                                       'herp', 'herpes', 'herpy', 'heshe', 'hoar', 'hom0', 'homey',
+#                                       'homo', 'hookah', 'hooch', 'hootch', 'howtokill', 'howtomurdep',
+#                                       'hump', 'humped', 'humping', 'incest', 'jerk', 'junkie', 'junky',
+#                                       'kill', 'knob', 'kraut', 'LEN', 'leper', 'lesbians', 'lesbo', 
+#                                       'lesbos', 'lez', 'lezbian', 'lesbos', 'lezbos', 'lezbians', 'lezzie', 
+#                                       'lezzies', 'lezzy', 'lmao', 'lmfao', 'loin', 'loins', 'lube', 'maxi',
+#                                       'menses', 'menstruate', 'menstruation', 'molest', 'moron', 'muff', 'murder',
+#                                       'mutha', 'muther', 'nad', 'nads', 'naked', 'napalm', 'nappy', 'nazi', 'nipple',
+#                                       'nipples', 'nob', 'nobs', 'nude', 'nudes', 'nutbutter', 'omg', 'opium', 'opiate', 
+#                                       'oral', 'orally', 'organ', 'ovary', 'ovum', 'ovums', 'paddy', 'pantie', 'panties',
+#                                       'panty', 'pasty', 'pastie', 'pawn', 'pcp', 'pedo', 'pedophilia', 'pedophile', 
+#                                       'pee', 'peepee', 'penetrate', 'penetration', 'penis', 'peyote', 'piss', 'piss-off', 
+#                                       'pissed', 'pissing', 'pissin', 'pissoff', 'pms', 'pollock', 'poop', 'pornography',
+#                                       'pot', 'potty', 'prick', 'pricks', 'pron', 'punky', 'puss', 'quicky', 'queer', 
+#                                       'queers', 'rape', 'rapist', 'raped', 'rectal', 'rectum', 'reich', 'revue', 'ritard', 
+#                                       'rum', 'rump', 'pube', 'pubic', 'ruski', 's0b', 's-o-b', 's.o.b.', 'sandbar', 'scag', 
+#                                       'scantily', 'schizo', 'schlong', 'screwed', 'screw', 'screwing', 'scroat', 'scrot', 
+#                                       'scrotum', 'scrud', 'scum', 'seaman', 'seamen', 'seduce', 'sexual', 'shag', 'skag', 
+#                                       'skank', 'slave', 'slope', 'smut', 'smutty', 'snatch', 'sniper', 'snuff', 'sodom', 
+#                                       'souse', 'soused', 'spac', 'spunk', 'steamy', 'stfu', 'stiffy', 'stoned', 'strip', 
+#                                       'stroke', 'stupid', 'suck', 'sucked', 'sucking', 'tampon', 'tawdry', 'teabagging', 
+#                                       'testee', 'testicle', 'thrust', 'thug', 'tinkle', 'toke', 'transsexual', 
+#                                       'tramp', 'trashy', 'tw4t', 'twat', 'ugly', 'undies', 'unwed', 'urinal', 'urine', 
+#                                       'uterus', 'uzi', 'viagra', 'vagina', 'virgin', 'valium', 'vixen', 'vodka', 'vomit',
+#                                       'vulgar', 'wad', 'wedgie', 'weed', 'weewee', 'weenie', 'weiner', 'weirdo', 'willy', 
+#                                       'willies', 'womb', 'woody', 'wtf'])
 
 if __name__ == '__main__':
     for extension in initial_extensions:
         bot.load_extension(extension)
 
-@tasks.loop(seconds=10.0)
-async def remove_inf():
-        cursor = modcol.find({})
-        for document in cursor:
-          if document['infraction'] == 'Ban':
-              if document['removetime'] < time.time():
-                  serverGuild = bot.get_guild(int(document['guildid']))
-                  user = bot.get_user(int(document['userid']))
-                  await serverGuild.unban(user)
-
-@remove_inf.before_loop
-async def before_some_task():
-  await bot.wait_until_ready()
-
-
 @bot.event
 async def on_message(message):
     await bot.process_commands(message)
-    profVal = configcol.find({"$and": [{"guild": message.guild.id}, {"cfg_type": 'profanity'}]})
-    for x in profVal:
-        levelProf = str(x['level'])
+    #profVal = configcol.find({"$and": [{"guild": message.guild.id}, {"cfg_type": 'profanity'}]})
+    #for x in profVal:
+    #    levelProf = str(x['level'])
 
-    try:
-        if levelProf == 'on':
-            if profanity.contains_profanity(message.content.lower()):
-                await message.delete()
-                warnmsg = await message.channel.send(f"{message.author.mention}, watch your language.")
-                await asyncio.sleep(10)
-                await warnmsg.delete()
+    #try:
+    #    if levelProf == 'on':                                                   #profanity config is disabled temporarly
+    #        if profanity.contains_profanity(message.content.lower()):
+    #            await message.delete()
+    #            warnmsg = await message.channel.send(f"{message.author.mention}, watch your language.")
+    #            await asyncio.sleep(10)
+    #            await warnmsg.delete()
 
-    except UnboundLocalError:
-        return
+    #except UnboundLocalError:
+    #    return
 
     if "pog" in message.content.lower():
         if message.author.bot:
@@ -169,8 +153,7 @@ async def on_message(message):
 @bot.event 
 async def on_ready():
     print("Bot is online.")
-    remove_inf.start()
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="u.help and other Queros commands in " + str(len(bot.guilds)) + " servers"))
+    #await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="u.help and other Queros commands in " + str(len(bot.guilds)) + " servers"))
 
 @bot.event
 async def on_command_error(ctx, error):
@@ -184,6 +167,6 @@ async def on_command_error(ctx, error):
         await ctx.send("You are missing the permissions to run this command.")
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.send("You are missing arguments in your command, check u.help [command] for the arguments.")
-    raise error
+    print(error)
 
 bot.run(TOKEN, bot=True, reconnect=True)

@@ -134,7 +134,6 @@ class Fun(commands.Cog):
 			pic = discord.File('wavedimg.png')
 			await ctx.send(file=pic)
 		
-
 	@commands.command()
 	@commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
 	async def deepfryuser(self, ctx, user: discord.Member): 
@@ -164,8 +163,7 @@ class Fun(commands.Cog):
 		image.save("fryer.png")
 		pic = discord.File('fryer.png')
 		await ctx.send(file=pic)
-		
-
+	
 	@commands.command(aliases=['shitpost'])
 	@commands.cooldown(rate=1, per=3.0, type=commands.BucketType.user) #same as the meme command
 	async def sp(self, ctx):
@@ -341,7 +339,6 @@ class Fun(commands.Cog):
 						embed.set_footer(text="Upvotes: " + str(post.score))
 						await ctx.send(embed=embed)
 
-
 	@commands.command(aliases=['8ball'])
 	@commands.cooldown(rate=1, per=1.0, type=commands.BucketType.user)
 	async def eightB(self, ctx: commands.Context, *, query: str):
@@ -395,8 +392,6 @@ class Fun(commands.Cog):
 					"Sources point to no"]
 						await ctx.send(random.choice(resultNo))
 						return
-
-
 
 #setups command.  command is needed, make sure to use cogs.[name of file]
 def setup(bot):
