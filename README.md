@@ -35,5 +35,7 @@ Message me on Discord or go on the support server and request your server to hav
 Dm me on Discord (TrooperZ#7824) or join the support server [here](https://discord.gg/7qvsUCBZ8W).
 
 Also, be sure to help me out by donating!
+
 XMR: 454KvhmqG7jKkf5LQ4zWbKdfN9iCW3fKuZbzz546i6PHDFJPvrNLKvP3oUqBPwBEWEP2YPvLACmorVp9KeqRRW5HShzrzBM
+
 ETH: 0x7dce61d6b52c83a0c0d125787e081a841c52f2b4
