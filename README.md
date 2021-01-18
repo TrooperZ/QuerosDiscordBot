@@ -8,11 +8,7 @@ Queros (pronounced like kew-eros) is a Discord bot written in Python designed wi
 
 ### Moderation:
 
-Queros comes equipped with basic commands for moderation. It has temp banning, text mute, vc mute, kick, warn, and logging for that. Currently, only banning supports temporary infraction, but vc mute and text mute will come soon.
-
-To temp ban, run u.ban @user reason time unit_of_time (u.ban @user reason 1 hr) and the acceptable times are sec, min, hr, day, wk, mo, yr.
-
-Queros has a built in anti-curse filter that can help with misbehaving people.
+Queros comes equipped with basic commands for moderation. It has temp infractions, ban, text mute, vc mute, kick, warn, and infraction logging. 
 
 Queros has an toggleble channel and command feature to restrict some channels and commands from being used. 
 
@@ -31,7 +27,13 @@ This bot has a lot of fun commands. You can manipulate images and run funny comm
 
 Note: For loop, shuffle, and the override commands, you need Manage Server perms. 
 
+### How to get premium?
+Message me on Discord or go on the support server and request your server to have premium status. You must pay me 5 dollars worth of crypto on either XMR (Monero) or ETH (Ethereum) and supply me with the server ID (Right click server icon, copy id) and payment proof. I will enable premium on your server within 1-5 days.
 
 **Have any questions?**
 
-Dm me on Discord (MagRevolver#7824) or join the support server [here](https://discord.gg/7qvsUCBZ8W).
+Dm me on Discord (TrooperZ#7824) or join the support server [here](https://discord.gg/7qvsUCBZ8W).
+
+Also, be sure to help me out by donating!
+XMR: 454KvhmqG7jKkf5LQ4zWbKdfN9iCW3fKuZbzz546i6PHDFJPvrNLKvP3oUqBPwBEWEP2YPvLACmorVp9KeqRRW5HShzrzBM
+ETH: 0x7dce61d6b52c83a0c0d125787e081a841c52f2b4
