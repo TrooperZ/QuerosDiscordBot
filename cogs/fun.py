@@ -163,38 +163,6 @@ class Fun(commands.Cog):
 		image.save("fryer.png")
 		pic = discord.File('fryer.png')
 		await ctx.send(file=pic)
-	
-	@commands.command(aliases=['shitpost'])
-	@commands.cooldown(rate=1, per=3.0, type=commands.BucketType.user) #same as the meme command
-	async def sp(self, ctx):
-		"""Sends a dump from the reddit meme latrine."""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-		cmdsList = ['0']
-		for i in cmds:
-			cmdOff = i['commands']
-			cmdsList.extend(cmdOff)
-		if 'shitpost' in cmdsList:
-			return
-		elif 'sp' in cmdsList:
-			return
-		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-		for i in channels:
-			channeloff = i['channels']
-			channelList.extend(channeloff)
-
-		if ctx.message.channel.id in channelList:
-			return
-
-		coinflip = random.randint(1, 2)
-		if coinflip == 1:
-			response = requests.get("https://www.reddit.com/r/shitposts.json", headers={"User-Agent": "linux:queros:v1.0.0"})
-		if coinflip == 2:
-			response = requests.get("https://www.reddit.com/r/shitposting.json", headers={"User-Agent": "linux:queros:v1.0.0"})
-		page = response.json()
-		meme = random.choice(page["data"]["children"])["data"]["url"]
-		await ctx.send(meme)
 
 	@commands.command()
 	@commands.cooldown(rate=1, per=3.0, type=commands.BucketType.user)
