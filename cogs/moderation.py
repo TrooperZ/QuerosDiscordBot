@@ -357,7 +357,6 @@ class Moderation(commands.Cog):
 
             overwrites = {
                 role: discord.PermissionOverwrite(
-                    read_messages=True,
                     send_messages=False,
                 )
             }
@@ -410,7 +409,6 @@ class Moderation(commands.Cog):
 
             overwrites = {
                 Muted: discord.PermissionOverwrite(
-                    read_messages=True,
                     send_messages=False,
                 )
             }
