@@ -345,9 +345,9 @@ class Moderation(commands.Cog):
         """Kicks a user in voice channel. (Needs Move Members permissions)"""
         await user.edit(voice_channel=None)
 
-    @commands.command()
+    @commands.command(aliases=['temptxtmute', 'softtxtmute', 'softtextmute'])
     @commands.has_permissions(manage_roles=True)
-    async def temptxtmute(self, ctx, user: discord.Member, duration: TimeConverter, *, reason="No reason"):
+    async def temptextmute(self, ctx, user: discord.Member, duration: TimeConverter, *, reason="No reason"):
         """Temp mutes a user in text channels. (Needs Manage Roles permissions)"""
 
         if discord.utils.get(ctx.guild.roles, name='Muted'):
@@ -355,14 +355,8 @@ class Moderation(commands.Cog):
 
             await user.add_roles(role)
 
-            overwrites = {
-                role: discord.PermissionOverwrite(
-                    send_messages=False,
-                )
-            }
-            
             for channel in ctx.guild.channels:
-                await channel.edit(overwrites=overwrites)
+                await channel.set_permissions(role, send_messages=False)
 
         else:
             perms = discord.Permissions(send_messages=False, read_messages=True)
@@ -372,15 +366,8 @@ class Moderation(commands.Cog):
             await role.edit(position=0)
             await user.add_roles(role)
 
-            overwrites = {
-                Muted: discord.PermissionOverwrite(
-                    read_messages=True,
-                    send_messages=False,
-                )
-            }
-
             for channel in ctx.guild.channels:
-                await channel.edit(overwrites=overwrites)
+                await channel.set_permissions(role, send_messages=False)
 
         txtmutelisting = {'userid':user.id, 
                           'guildid':ctx.message.guild.id, 
@@ -397,9 +384,9 @@ class Moderation(commands.Cog):
         await user.send(embed=mute)
         x = modcol.insert_one(txtmutelisting)
 
-    @commands.command()
+    @commands.command(aliases=['permtxtmute', 'hardtxtmute', 'hardtextmute'])
     @commands.has_permissions(manage_roles=True)
-    async def permtxtmute(self, ctx, user: discord.Member,*, reason="No reason"):
+    async def permtextmute(self, ctx, user: discord.Member,*, reason="No reason"):
         """Temp mutes a user in text channels. (Needs Manage Roles permissions)"""
 
         if discord.utils.get(ctx.guild.roles, name='Muted'):
@@ -407,16 +394,8 @@ class Moderation(commands.Cog):
 
             await user.add_roles(role)
 
-            overwrites = {
-                Muted: discord.PermissionOverwrite(
-                    send_messages=False,
-                )
-            }
-
-            for i in self.bot.guilds:
-                for x in i.channels:
-                    await x.edit(overwrites=overwrites)
-                return
+            for channel in ctx.guild.channels:
+                await channel.set_permissions(role, send_messages=False)
 
         else:
             perms = discord.Permissions(send_messages=False, read_messages=True)
@@ -433,11 +412,8 @@ class Moderation(commands.Cog):
                 )
             }
 
-            for i in self.bot.guilds:
-                for x in i.channels:
-                    await x.edit(overwrites=overwrites)
-                return
-            return
+            for channel in ctx.guild.channels:
+                await channel.set_permissions(role, send_messages=False)
 
         txtmutelisting = {'userid':user.id, 
                           'guildid':ctx.message.guild.id, 
