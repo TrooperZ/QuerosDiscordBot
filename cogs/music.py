@@ -535,7 +535,7 @@ class Music(commands.Cog):
 
         await ctx.send(":door: Leaving the voice channel...")
 
-    @commands.command(aliases=['eq'], name="equalizer (<:silverstar11:794770265657442347> Qu+ Server)")
+    @commands.command(aliases=['eq', 'equalizer'], name="equalizer (<:silverstar11:794770265657442347> Qu+ Server)")
     @disabledCmd_check()
     #@premiumUser()
     async def equalizer(self, ctx, type:str):
@@ -643,7 +643,7 @@ class Music(commands.Cog):
     #        return
     #    await ctx.send("Your queue will now loop 1 time.")
     
-    @commands.command(aliases=['vol'], name="volume (<:silverstar1:794770265657442347> Qu+ Server)")
+    @commands.command(aliases=['vol', 'volume'], name="volume (<:silverstar1:794770265657442347> Qu+ Server)")
     @disabledCmd_check()
     #@premiumUser()
     async def volume(self, ctx, *, volume: int):
