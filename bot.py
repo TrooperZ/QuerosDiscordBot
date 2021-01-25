@@ -39,7 +39,7 @@ modcol = mydb["moderation"]
 premServercol = mydb["vipServers"]
 
 
-initial_extensions = ['cogs.utillity', 'cogs.fun', 'cogs.configuration', 'cogs.moderation', 'cogs.economy', 'cogs.music']
+initial_extensions = ['cogs.utillity', 'cogs.fun', 'cogs.configuration', 'cogs.moderation', 'cogs.economy']#, 'cogs.music']
 
 intervals = (
     ('weeks', 604800),  # 60 * 60 * 24 * 7
@@ -150,6 +150,6 @@ async def on_command_error(ctx, error):
         await ctx.send("You are missing the permissions to run this command.")
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.send("You are missing arguments in your command, check u.help [command] for the arguments.")
-    print(error)
+    raise error
 
 bot.run(TOKEN, bot=True, reconnect=True)

@@ -8,8 +8,8 @@ import sys
 import os
 import urllib.request
 import discord
-import googletrans
-from googletrans import Translator
+import pygoogletranslation
+from pygoogletranslation import Translator
 from discord.ext import commands
 from googlesearch import search
 import datetime
@@ -258,7 +258,7 @@ class Utillity(commands.Cog):
 		await ctx.channel.trigger_typing() 
 		translator = Translator() #generates translator item
 
-		conversionKey = googletrans.LANGUAGES #grabs lang codes to physical languages
+		conversionKey = pygoogletranslation.LANGUAGES #grabs lang codes to physical languages
 		reversed_dictionary = {value : key for (key, value) in conversionKey.items()} #reverses it for frontend
 
 		if toLang == '_' and fromLang == '0': #if no languages are specified
@@ -270,7 +270,6 @@ class Utillity(commands.Cog):
 			embed = discord.Embed(title="**Queros Translate**", description="Here's the translated text!", color=0x2b00ff) 
 			embed.add_field(name=convertedSrc.capitalize(), value=text, inline=True)
 			embed.add_field(name="English", value=result.text, inline=True)
-			embed.set_footer(text="Powered by Google Translate's Python library")
 
 			await ctx.send(embed=embed)
 			return
@@ -287,7 +286,6 @@ class Utillity(commands.Cog):
 			embed = discord.Embed(title="**Queros Translate**", description="Here's the translated text!", color=0x2b00ff)
 			embed.add_field(name=convertedSrc.capitalize(), value=text, inline=True)
 			embed.add_field(name=toLang.capitalize(), value=result.text, inline=True)
-			embed.set_footer(text="Powered by Google Translate's Python library")
 
 			await ctx.send(embed=embed)
 			return
@@ -305,7 +303,6 @@ class Utillity(commands.Cog):
 			embed = discord.Embed(title="**Queros Translate**", description="Here's the translated text!", color=0x2b00ff)
 			embed.add_field(name=fromLang.capitalize(), value=text, inline=True)
 			embed.add_field(name=toLang.capitalize(), value=result.text, inline=True)
-			embed.set_footer(text="Powered by Google Translate's Python library")
 
 			await ctx.send(embed=embed)
 			return
