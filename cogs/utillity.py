@@ -314,6 +314,7 @@ class Utillity(commands.Cog):
 
 			except Exception as e: #catches exception
 					await ctx.send("Your arguments seem to be invalid, try again.")
+					print(e)
 
 		except Exception as e:
 			await ctx.send("Hmm, thats odd. The command errored out. Please try again, or with different arguments and report it on the support server.")
