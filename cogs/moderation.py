@@ -216,7 +216,7 @@ class Moderation(commands.Cog):
 
     @commands.command()
     @commands.has_guild_permissions(mute_members=True)
-    async def tempvcmute(self, ctx, user: discord.Member, duration: TimeConverter, *, reason="No reason"):
+    async def vcmute(self, ctx, user: discord.Member, duration: TimeConverter, *, reason="No reason"):
         """Temp mutes a user in vc (Needs Mute Members permissions)"""
         if duration < 30:
             await ctx.send("Duration must be longer than 30 seconds.")
@@ -246,7 +246,7 @@ class Moderation(commands.Cog):
 
     @commands.command()
     @commands.has_guild_permissions(mute_members=True)
-    async def permvcmute(self, ctx, user: discord.Member, *, reason="No reason"):
+    async def hardvcmute(self, ctx, user: discord.Member, *, reason="No reason"):
         """Permanently mutes a user in voice channel (Needs Mute Members permissions)"""
 
         vcmutelisting = {'userid':user.id, 
@@ -281,7 +281,7 @@ class Moderation(commands.Cog):
 
     @commands.command()
     @commands.has_guild_permissions(mute_members=True)
-    async def tempdeafen(self, ctx, user: discord.Member, duration: TimeConverter, *, reason="No reason"):
+    async def deafen(self, ctx, user: discord.Member, duration: TimeConverter, *, reason="No reason"):
         """Temp deafens a user in voice channel, does not mute. (Needs Mute Members permissions)"""
         if duration < 30:
             await ctx.send("Duration must be longer than 30 seconds.")
@@ -308,7 +308,7 @@ class Moderation(commands.Cog):
 
     @commands.command()
     @commands.has_guild_permissions(mute_members=True)
-    async def permdeafen(self, ctx, user: discord.Member, *, reason="No reason"):
+    async def harddeafen(self, ctx, user: discord.Member, *, reason="No reason"):
         """Perm deafens a user in voice channel, does not mute. (Needs Mute Members permissions)"""
 
         deafenlisting = {'userid':user.id, 
@@ -346,9 +346,9 @@ class Moderation(commands.Cog):
         """Kicks a user in voice channel. (Needs Move Members permissions)"""
         await user.edit(voice_channel=None)
 
-    @commands.command(aliases=['temptxtmute', 'softtxtmute', 'softtextmute'])
+    @commands.command(aliases=['temptxtmute', 'softtxtmute', 'softtextmute', 'temptextmute'])
     @commands.has_permissions(manage_roles=True)
-    async def temptextmute(self, ctx, user: discord.Member, duration: TimeConverter, *, reason="No reason"):
+    async def mute(self, ctx, user: discord.Member, duration: TimeConverter, *, reason="No reason"):
         """Temp mutes a user in text channels. (Needs Manage Roles permissions)"""
 
         if discord.utils.get(ctx.guild.roles, name='Muted'):
@@ -385,9 +385,9 @@ class Moderation(commands.Cog):
         await user.send(embed=mute)
         x = modcol.insert_one(txtmutelisting)
 
-    @commands.command(aliases=['permtxtmute', 'hardtxtmute', 'hardtextmute'])
+    @commands.command(aliases=['permtxtmute', 'hardtxtmute', 'hardtextmute', 'permtextmute'])
     @commands.has_permissions(manage_roles=True)
-    async def permtextmute(self, ctx, user: discord.Member,*, reason="No reason"):
+    async def hardmute(self, ctx, user: discord.Member,*, reason="No reason"):
         """Temp mutes a user in text channels. (Needs Manage Roles permissions)"""
 
         if discord.utils.get(ctx.guild.roles, name='Muted'):
@@ -429,9 +429,9 @@ class Moderation(commands.Cog):
         await user.send(embed=mute)
         x = modcol.insert_one(txtmutelisting)
 
-    @commands.command()
+    @commands.command(aliase=['untxtmute'])
     @commands.has_permissions(manage_roles=True)
-    async def untxtmute(self, ctx, user: discord.Member):
+    async def unmute(self, ctx, user: discord.Member):
         """Unmutes a user in text channels (Needs Manage Roles permissions)"""
 
         role = discord.utils.get(ctx.guild.roles, name='Muted')
