@@ -61,6 +61,7 @@ def display_time(seconds, granularity=2):
 
 class Moderation(commands.Cog):
     """Moderation Commands"""
+
     def __init__(self, bot):
         self.bot = bot
 

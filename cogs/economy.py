@@ -18,6 +18,7 @@ configcol = mydb['configuration']
 
 
 class Economy(commands.Cog):
+	"""Fun little economy game!"""
 	def __init__(self, bot):
 		#Initalizes bot.
 		self.bot = bot

@@ -37,7 +37,7 @@ reddit = praw.Reddit(client_id=REDDIT_CLIENT_ID,
 					 username=REDDIT_USERNAME)
 
 class Fun(commands.Cog):
-
+	"""Have lots of laughs with these commands!"""
 	def __init__(self, bot):
 		self.bot = bot
 
