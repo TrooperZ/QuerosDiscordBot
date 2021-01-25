@@ -231,95 +231,84 @@ class Utillity(commands.Cog):
 
 	@commands.command()
 	@commands.cooldown(rate=1, per=5.0, type=commands.BucketType.user)
-	async def translate(self, ctx, text, toLang='_', fromLang='0'): #translates text via google translate
+	async def translate(self, ctx, text: str, toLang='_', fromLang='0'): #translates text via google translate
 		"""Translates text via Google Translate. Put your text in quotes fromLang is the origin language and toLang is the target language. Make sure to spell the languages right.
 		Examples: 
 		u.translate "kako si?" (fromLang and toLang is not here so it auto detects and translates to English)
 		u.translate "je suis faim" spanish (toLang is specified and translates to Spanish)
 		u.translate "no habla espanol" spanish french (fromLang and toLang are specified and it does the translation)
-		"""
-		try: 
-			cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-			cmdsList = ['0']
-			for i in cmds:
-				cmdOff = i['commands']
-				cmdsList.extend(cmdOff)
-			if 'translate' in cmdsList:
-				return
+		"""		
+		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmdsList = ['0']
+		for i in cmds:
+			cmdOff = i['commands']
+			cmdsList.extend(cmdOff)
+		if 'translate' in cmdsList:
+			return
 
-			channelList = ['0']
-			channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		channelList = ['0']
+		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
-			for i in channels:
-				channeloff = i['channels']
-				channelList.extend(channeloff)
+		for i in channels:
+			channeloff = i['channels']
+			channelList.extend(channeloff)
 
-			if ctx.message.channel.id in channelList:
-				return
-			await ctx.channel.trigger_typing() 
-			translator = Translator() #generates translator item
+		if ctx.message.channel.id in channelList:
+			return
+		await ctx.channel.trigger_typing() 
+		translator = Translator() #generates translator item
 
-			conversionKey = googletrans.LANGUAGES #grabs lang codes to physical languages
-			reversed_dictionary = {value : key for (key, value) in conversionKey.items()} #reverses it for frontend
+		conversionKey = googletrans.LANGUAGES #grabs lang codes to physical languages
+		reversed_dictionary = {value : key for (key, value) in conversionKey.items()} #reverses it for frontend
 
-			try:
-				if toLang == '_' and fromLang == '0': #if no languages are specified
-					result = translator.translate(text) 
-					resultSRCconv = result.src.lower() #converts lang code to lowercase
-					convertedSrc = conversionKey[resultSRCconv] #converts code to word
+		if toLang == '_' and fromLang == '0': #if no languages are specified
+			result = translator.translate(text) 
+			resultSRCconv = result.src.lower() #converts lang code to lowercase
+			convertedSrc = conversionKey[resultSRCconv] #converts code to word
 
-					 #embed stuff
-					embed = discord.Embed(title="**Queros Translate**", description="Here's the translated text!", color=0x2b00ff) 
-					embed.add_field(name=convertedSrc.capitalize(), value=text, inline=True)
-					embed.add_field(name="English", value=result.text, inline=True)
-					embed.set_footer(text="Powered by Google Translate's Python library")
+				#embed stuff
+			embed = discord.Embed(title="**Queros Translate**", description="Here's the translated text!", color=0x2b00ff) 
+			embed.add_field(name=convertedSrc.capitalize(), value=text, inline=True)
+			embed.add_field(name="English", value=result.text, inline=True)
+			embed.set_footer(text="Powered by Google Translate's Python library")
 
-					await ctx.send(embed=embed)
-					return
+			await ctx.send(embed=embed)
+			return
 
-				elif fromLang == '0': #if dest lang is specified
-					toLanglow = toLang.lower() #grabs lowercase dest lang
-					toLangDictC = reversed_dictionary[toLanglow] #converts language name to code
+		elif fromLang == '0': #if dest lang is specified
+			toLanglow = toLang.lower() #grabs lowercase dest lang
+			toLangDictC = reversed_dictionary[toLanglow] #converts language name to code
 
-					result = translator.translate(text, dest=toLangDictC) 
-					resultSRCconv = result.src.lower() #lowers the origin lang src
-					convertedSrc = conversionKey[resultSRCconv] #converts src to language
+			result = translator.translate(text, dest=toLangDictC) 
+			resultSRCconv = result.src.lower() #lowers the origin lang src
+			convertedSrc = conversionKey[resultSRCconv] #converts src to language
 
-					 #embed stuff
-					embed = discord.Embed(title="**Queros Translate**", description="Here's the translated text!", color=0x2b00ff)
-					embed.add_field(name=convertedSrc.capitalize(), value=text, inline=True)
-					embed.add_field(name=toLang.capitalize(), value=result.text, inline=True)
-					embed.set_footer(text="Powered by Google Translate's Python library")
+				#embed stuff
+			embed = discord.Embed(title="**Queros Translate**", description="Here's the translated text!", color=0x2b00ff)
+			embed.add_field(name=convertedSrc.capitalize(), value=text, inline=True)
+			embed.add_field(name=toLang.capitalize(), value=result.text, inline=True)
+			embed.set_footer(text="Powered by Google Translate's Python library")
 
-					await ctx.send(embed=embed)
-					return
+			await ctx.send(embed=embed)
+			return
 
-				elif fromLang != '0' and toLang != '_': #if languages are specified
-					fromLanglow = fromLang.lower() #lowers languages
-					toLanglow = toLang.lower()
+		elif fromLang != '0' and toLang != '_': #if languages are specified
+			fromLanglow = fromLang.lower() #lowers languages
+			toLanglow = toLang.lower()
 
-					fromLangDictC = reversed_dictionary[fromLanglow] #converts to codes
-					toLangDictC = reversed_dictionary[toLanglow]
+			fromLangDictC = reversed_dictionary[fromLanglow] #converts to codes
+			toLangDictC = reversed_dictionary[toLanglow]
 
-					result = translator.translate(text, src=fromLangDictC, dest=toLangDictC)
+			result = translator.translate(text, src=fromLangDictC, dest=toLangDictC)
 
-					 #embed stuff
-					embed = discord.Embed(title="**Queros Translate**", description="Here's the translated text!", color=0x2b00ff)
-					embed.add_field(name=fromLang.capitalize(), value=text, inline=True)
-					embed.add_field(name=toLang.capitalize(), value=result.text, inline=True)
-					embed.set_footer(text="Powered by Google Translate's Python library")
+				#embed stuff
+			embed = discord.Embed(title="**Queros Translate**", description="Here's the translated text!", color=0x2b00ff)
+			embed.add_field(name=fromLang.capitalize(), value=text, inline=True)
+			embed.add_field(name=toLang.capitalize(), value=result.text, inline=True)
+			embed.set_footer(text="Powered by Google Translate's Python library")
 
-					await ctx.send(embed=embed)
-					return
-
-			except Exception as e: #catches exception
-					await ctx.send("Your arguments seem to be invalid, try again.")
-					print(e)
-
-		except Exception as e:
-			await ctx.send("Hmm, thats odd. The command errored out. Please try again, or with different arguments and report it on the support server.")
-			await ctx.send("Error: " + str(e))
-			logging.exception(f"Excecutor: {ctx.message.author.name}", exc_info=True)
+			await ctx.send(embed=embed)
+			return
 
 	@commands.command(aliases=['calculate', 'calculator'])
 	@commands.cooldown(rate=1, per=1.0, type=commands.BucketType.user)
