@@ -6,28 +6,10 @@
 import os
 import discord
 from discord.ext import commands
-from discord.ext import tasks
-import time
-import re
-import asyncio
-import itertools
-import sys
-import traceback
-from async_timeout import timeout
-from functools import partial
-import requests	
-import asyncio
-import functools
-import itertools
-import math
-import datetime
-import random
 from pretty_help import PrettyHelp
-import json
 import pymongo
-import wavelink
 from dotenv import load_dotenv
-from better_profanity import profanity
+import wavelink
 
 load_dotenv()
 
@@ -37,7 +19,6 @@ mydb = myclient["data"]
 configcol = mydb["configs"]
 modcol = mydb["moderation"]
 premServercol = mydb["vipServers"]
-
 
 initial_extensions = ['cogs.utillity', 'cogs.fun', 'cogs.configuration', 'cogs.moderation', 'cogs.economy', 'cogs.botinfo', 'cogs.music']
 
@@ -60,12 +41,10 @@ def display_time(seconds, granularity=2):
             result.append("{} {}".format(value, name))
     return ', '.join(result[:granularity])
 
-TOKEN = os.getenv('DISCORD_TOKEN')
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='u.', intents=intents, help_command=PrettyHelp())
 bot.help_command = PrettyHelp(color=0x6bd5ff, active=60, verify_checks=False)
 bot.wavelink = wavelink.Client(bot=bot)
-#profanity.load_censor_words(whitelist_words=
 
 @bot.command(hidden=True)
 async def addpremiumserver(ctx, serverid: int):
@@ -74,7 +53,6 @@ async def addpremiumserver(ctx, serverid: int):
         return
     premServercol.insert_one({"server":ctx.guild.id})
     await ctx.send("done")
-    return
 
 @bot.command(hidden=True)
 async def delpremiumserver(ctx, serverid: int):
@@ -83,7 +61,6 @@ async def delpremiumserver(ctx, serverid: int):
         return
     premServercol.delete_one({"server":ctx.guild.id})
     await ctx.send("done")
-    return
 
 @bot.command(hidden=True)
 async def getguilds(ctx):
@@ -163,4 +140,4 @@ async def on_command_error(ctx, error):
         await ctx.send("You are missing arguments in your command, check u.help [command] for the arguments.")
     raise error
 
-bot.run(TOKEN, bot=True, reconnect=True)
+bot.run(os.getenv('DISCORD_TOKEN'), bot=True, reconnect=True)

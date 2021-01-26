@@ -24,17 +24,12 @@ MONGO_PASS = os.getenv('MONGO_PASS')
 myclient = pymongo.MongoClient("mongodb+srv://queroscode:" + MONGO_PASS + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority")
 mydb = myclient["data"]
 configcol = mydb["configs"]
-
-#reddit ID stuff
-REDDIT_CLIENT_ID = os.getenv('REDDIT_CLIENT_ID')
-REDDIT_API_KEY = os.getenv('REDDIT_API_KEY')
-REDDIT_USERNAME = os.getenv('REDDIT_USERNAME')
-REDDIT_PASSWORD = os.getenv('REDDIT_PASSWORD')
-reddit = praw.Reddit(client_id=REDDIT_CLIENT_ID, 
-					 client_secret=REDDIT_API_KEY,
-					 password=REDDIT_PASSWORD, 
+ 
+reddit = praw.Reddit(client_id=os.getenv('REDDIT_CLIENT_ID'), 
+					 client_secret=os.getenv('REDDIT_API_KEY'),
+					 password=os.getenv('REDDIT_PASSWORD'), 
 					 user_agent='QuerosDiscordBot accessAPI:v0.0.1 (by /u/Troopr_Z)',
-					 username=REDDIT_USERNAME)
+					 username=os.getenv('REDDIT_USERNAME'))
 
 class Fun(commands.Cog):
 	"""Have lots of laughs with these commands!"""

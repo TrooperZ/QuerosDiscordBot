@@ -24,8 +24,7 @@ import psutil
 
 load_dotenv()
 
-MONGO_PASS = os.getenv('MONGO_PASS')
-myclient = pymongo.MongoClient("mongodb+srv://queroscode:" + MONGO_PASS + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority")
+myclient = pymongo.MongoClient("mongodb+srv://queroscode:" + os.getenv('MONGO_PASS') + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority")
 mydb = myclient["data"]
 configcol = mydb["configs"]
 
