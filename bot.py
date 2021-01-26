@@ -85,6 +85,17 @@ async def delpremiumserver(ctx, serverid: int):
     await ctx.send("done")
     return
 
+@bot.command(hidden=True)
+async def getguilds(ctx):
+    owner = await bot.fetch_user(390841378277425153)
+    if ctx.author != owner:
+        return
+    f = open("guilds.txt", "w")
+    for i in bot.guilds:
+        f.write(i.name)
+        await ctx.send(i.name)
+    f.close()
+
 if __name__ == '__main__':
     for extension in initial_extensions:
         bot.load_extension(extension)
@@ -136,10 +147,6 @@ async def on_message(message):
 @bot.event 
 async def on_ready():
     print("Bot is online.")
-    f = open("demofile2.txt", "w")
-    for i in bot.guilds:
-        f.write(i)
-    f.close()
     #await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="u.help and other Queros commands in " + str(len(bot.guilds)) + " servers"))
 
 @bot.event
