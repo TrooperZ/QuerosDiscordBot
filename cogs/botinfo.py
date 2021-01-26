@@ -87,7 +87,7 @@ class BotInfo(commands.Cog):
 		embed=discord.Embed(title="Queros Information", description="Info about creator and bot status")
 		embed.set_author(name=str(author), icon_url=author.avatar_url)
 		embed.add_field(name="Uptime:", value=uptime, inline=True)
-		embed.add_field(name="Total Users", value=str(len(self.bot.users)), inline=True)
+		embed.add_field(name="Total Users", value=str(len(set(self.bot.users))), inline=True)
 		embed.add_field(name="Total Servers", value=str(len(self.bot.guilds)), inline=True)
 		embed.add_field(name="Language Used", value="Python, using discord.py", inline=True)
 		embed.add_field(name="Version", value="v0.5", inline=True)

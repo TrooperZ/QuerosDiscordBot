@@ -136,8 +136,10 @@ async def on_message(message):
 @bot.event 
 async def on_ready():
     print("Bot is online.")
+    f = open("demofile2.txt", "a")
     for i in bot.guilds:
-        print(i)
+        f.write(i)
+    f.close()
     #await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="u.help and other Queros commands in " + str(len(bot.guilds)) + " servers"))
 
 @bot.event
