@@ -1,102 +1,90 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# music.py          All the music commands for the Queros discord bot.
-#Exclude dotenv if you have environment variables set, dotenv uses a .env file to get them, it's easier this way idk why.
+# music.py 
 
-import discord #base discord module
-from discord.ext import commands #command identifiers
-from discord.ext import tasks #loops
-import wavelink #lavalink wrapper (this is what plays music)
-import asyncio #async functions (asyncio.sleep, async def xyz(), await, etc)
-import datetime #makes fancy date stuff
-import time #gets time stuff
-import os #basic os and files management, idk why but sure
-import sys #system stuff, idk why but sure
-import random #makes random stuff, used for shuffle
-import re #regex idk exactly why i imported this but it works
-import pymongo #database stuff
-import math #do i need this? idk ill check later                                        check variable necessity later
-from dotenv import load_dotenv #uses stuff in a .env file for environment variables
+import discord 
+from discord.ext import commands 
+from discord.ext import tasks 
+import wavelink 
+import asyncio 
+import datetime 
+import time 
+import os 
+import sys 
+import random 
+import re 
+import pymongo 
+import math 
+from dotenv import load_dotenv 
 
-load_dotenv() #loads the .env file
+load_dotenv() 
 
-#mongodb stuff, gets password and connects
+
 MONGO_PASS = os.getenv('MONGO_PASS')
 myclient = pymongo.MongoClient("mongodb+srv://queroscode:" + MONGO_PASS + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority")
 
 mydb = myclient["data"]
-configcol = mydb["configs"] #checks for disabled commands/channels
-premServercol = mydb["vipServers"] #for vip commands
-
+configcol = mydb["configs"]
+premServercol = mydb["vipServers"] 
 
 class QueueSystem(commands.Cog):
-    def __init__(self, bot): 
-        #i have no clue what this does, im guessing it makes a list of guilds?
+    def __init__(self, bot):
         self.guildtracker = {}
         self.channeltracker = {}
         self.bot = bot
     
     async def newqueue(self, guild_id):
-        queue = Queue() #queue commands loaded
-        self.guildtracker[guild_id] = queue #sets queue for guild
+        queue = Queue() 
+        self.guildtracker[guild_id] = queue 
         return
     
     async def get_queue(self, guild_id):
-        return self.guildtracker[guild_id] #returns the queue
+        return self.guildtracker[guild_id] 
     
     async def newchannel(self, guild_id, channel):
-        self.channeltracker[guild_id] = channel #gets a new channel queue setup
+        self.channeltracker[guild_id] = channel 
         return 
     
     async def get_channel(self, guild_id):
-        return self.channeltracker[guild_id] #gets the channel
+        return self.channeltracker[guild_id] 
      
 class Queue():
     def __init__(self):
-        self.queue = [] #inits queue
-        self.requestlist = [] #inits requester list (idk why i couldn't have put this in with the queue itself, via tuples or indice modification, but this took less code and rewriting :/)
-        
+        self.queue = [] 
+        self.requestlist = [] 
+
     def clear(self):
-        #deletes everything in queue
         self.nowsong = self.queue[0]
         self.nowreq = self.requestlist[0]
         self.queue = [self.nowsong]
         self.requestlist = [self.nowreq]
     
     def add(self, item, requ):
-        #adds stuff to queue
         self.queue.append(item)
         self.requestlist.append(requ)
         
     def addtop(self, item, requ):
-        #adds to top of queue
         self.queue.insert(1, item)
         self.requestlist.insert(1, requ)
 
     def skip(self, amount=1):
-        #skips some songs
         for x in range(amount):
             self.queue.pop(0)
             self.requestlist.pop(0)
 
     def remove(self, position=1):
-        #removes songs
         self.queue.pop(position)
         self.requestlist.pop(position)
 
     def queueLen(self):
-        #gets number of songs
         return int(len(self.queue))
         
     def data(self):
-        #returns the queue (songs only)
         return self.queue
     
     def latest(self):
-        #returns latest song
         return self.queue[0]
     
-    #this part is like the above 2, but for the request list
     def queueUser(self):
         return self.requestlist
 
@@ -104,26 +92,23 @@ class Queue():
         return self.requestlist[0]
 
     def getSongData(self, position=0):
-        #gets the song data from a position
         return self.queue[position]
 
     def getSongReq(self, position=0):
-        #gets the song requester from a position
         return self.requestlist[position]
 
     def shuffle(self):
-        #shuffles the queue. 
-        firstQueue = self.queue[0] #singles out the now playing
+        firstQueue = self.queue[0] 
         firstRequest = self.requestlist[0]
 
-        queuetail = self.queue[1:] #rest of the queue
+        queuetail = self.queue[1:] 
         requesttail = self.requestlist[1:]
 
-        zipList = list(zip(queuetail, requesttail)) #combines them so they can be shuffled
+        zipList = list(zip(queuetail, requesttail)) 
         random.shuffle(zipList)
 
-        self.queue, self.requestlist = map(list,zip(*zipList)) #unzips the shuffled list into the seperate lists
-        self.queue.insert(0, firstQueue) #puts the new playing at the front
+        self.queue, self.requestlist = map(list,zip(*zipList)) 
+        self.queue.insert(0, firstQueue) 
         self.requestlist.insert(0, firstRequest)
 
 class songdata(commands.Cog): #song data retrevial part
@@ -259,13 +244,13 @@ class songdata(commands.Cog): #song data retrevial part
 
             return embed
 
-class dj_perm_error(commands.CheckFailure): #error if dj role nor perms are detected
+class dj_perm_error(commands.CheckFailure): 
      pass
      
-class premiumServer_error(commands.CheckFailure): #error if server isnt premium
+class premiumServer_error(commands.CheckFailure): 
      pass
 
-class disabledCommand_error(commands.CheckFailure): #disabled command ignore class
+class disabledCommand_error(commands.CheckFailure): 
     pass
 
 
@@ -298,7 +283,7 @@ class Music(commands.Cog):
                 if ctx.invoked_with in AdminCmd:
                     raise dj_perm_error()
                 else:
-                    return #admin commands
+                    return 
 
     def disabledCmd_check():
         # Checks for disabled channel/command
@@ -537,7 +522,7 @@ class Music(commands.Cog):
 
     @commands.command(aliases=['eq', 'equalizer'], name="equalizer (<:silverstar11:794770265657442347> Qu+ Server)")
     @disabledCmd_check()
-    #@premiumUser()
+    @premiumUser()
     async def equalizer(self, ctx, type:str):
         """Sets the equalizer for the player.
         flat = Resets your EQ to Flat (resets it)
@@ -645,7 +630,7 @@ class Music(commands.Cog):
     
     @commands.command(aliases=['vol', 'volume'], name="volume (<:silverstar1:794770265657442347> Qu+ Server)")
     @disabledCmd_check()
-    #@premiumUser()
+    @premiumUser()
     async def volume(self, ctx, *, volume: int):
         """Set the volume. Volume above 100 causes earrape."""
         if ctx.author.voice == None:
