@@ -136,7 +136,7 @@ async def on_message(message):
 @bot.event 
 async def on_ready():
     print("Bot is online.")
-    f = open("demofile2.txt", "a")
+    f = open("demofile2.txt", "w")
     for i in bot.guilds:
         f.write(i)
     f.close()
