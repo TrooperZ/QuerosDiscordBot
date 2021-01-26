@@ -39,7 +39,7 @@ modcol = mydb["moderation"]
 premServercol = mydb["vipServers"]
 
 
-initial_extensions = ['cogs.utillity', 'cogs.fun', 'cogs.configuration', 'cogs.moderation', 'cogs.economy']#, 'cogs.music']
+initial_extensions = ['cogs.utillity', 'cogs.fun', 'cogs.configuration', 'cogs.moderation', 'cogs.economy', 'cogs.botinfo', 'cogs.music']
 
 intervals = (
     ('weeks', 604800),  # 60 * 60 * 24 * 7
@@ -136,6 +136,8 @@ async def on_message(message):
 @bot.event 
 async def on_ready():
     print("Bot is online.")
+    for i in bot.guilds:
+        print(i)
     #await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="u.help and other Queros commands in " + str(len(bot.guilds)) + " servers"))
 
 @bot.event
