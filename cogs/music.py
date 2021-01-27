@@ -10,7 +10,6 @@ import asyncio
 import datetime 
 import time 
 import os 
-import sys 
 import random 
 import re 
 import pymongo 
@@ -18,7 +17,6 @@ import math
 from dotenv import load_dotenv 
 
 load_dotenv() 
-
 
 MONGO_PASS = os.getenv('MONGO_PASS')
 myclient = pymongo.MongoClient("mongodb+srv://queroscode:" + MONGO_PASS + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority")
@@ -52,12 +50,16 @@ class Queue():
     def __init__(self):
         self.queue = [] 
         self.requestlist = [] 
+        self.skipsong = None 
+        self.skipvoters = []
 
     def clear(self):
         self.nowsong = self.queue[0]
         self.nowreq = self.requestlist[0]
         self.queue = [self.nowsong]
         self.requestlist = [self.nowreq]
+        self.skipsong = None 
+        self.skipvoters = []
     
     def add(self, item, requ):
         self.queue.append(item)
@@ -67,10 +69,21 @@ class Queue():
         self.queue.insert(1, item)
         self.requestlist.insert(1, requ)
 
+    def voteskip(self, user):
+        self.skipvoters.append(user)
+
+    def voteskiplen(self):
+        return len(self.skipvoters)
+
+    def skiplist(self):
+        return self.skipvoters
+
     def skip(self, amount=1):
         for x in range(amount):
             self.queue.pop(0)
             self.requestlist.pop(0)
+        self.skipsong = None 
+        self.skipvoters = []
 
     def remove(self, position=1):
         self.queue.pop(position)
@@ -259,8 +272,6 @@ class Music(commands.Cog):
     
     def __init__(self, bot):
         self.bot = bot 
-        self.skipsong = None #inits song to skip and voter list
-        self.skipvoters = []
 
 
     async def cog_check(self, ctx):
@@ -351,8 +362,22 @@ class Music(commands.Cog):
         for i in self.bot.guilds:
             player = self.bot.wavelink.get_player(i.id)
             queue = await self.bot.QueueSystem.get_queue(i.id)
-
+            channel = self.bot.get_channel(player.channel_id)
+            try:
+                if len(channel.members) == 1:
+                        queue.clear()
+                        await player.destroy()
+                        queue.clear()
+            except:
+                pass
             if player.is_playing == False:
+                try:
+                    queue.clear()
+                    await player.destroy()
+                    queue.clear()
+                except:
+                    pass
+            elif player.is_connected == False:
                 try:
                     queue.clear()
                     await player.destroy()
@@ -701,14 +726,15 @@ class Music(commands.Cog):
                 await cmd(ctx)
 
             elapsed = 0
+            try:
+                while queue.latest() == song:
+                    await asyncio.sleep(1)
+                    elapsed += 975
 
-            while queue.latest() == song:
-                await asyncio.sleep(1)
-                elapsed += 975
-
-                if elapsed > song.length:
-                    queue.skip()
-
+                    if elapsed > song.length:
+                        queue.skip()
+            except:
+                pass
     @commands.command()
     @disabledCmd_check()
     async def playskip(self, ctx, *, query):
@@ -779,7 +805,6 @@ class Music(commands.Cog):
         channel = self.bot.get_channel(player.channel_id)
 
         members = channel.members
-        threshold = int((len(members) - 1) // 1.5)
 
         if ctx.author == queue.latestQueueUser():
             queue.skip(1)
@@ -787,25 +812,19 @@ class Music(commands.Cog):
             await player.stop()
 
         elif ctx.author != queue.latestQueueUser():
-            if threshold == 1:
+            if (len(channel.members) - 1) // 1.5 == 1:
                 queue.skip(1)
                 await ctx.send(f":track_next: Skipping song...")
                 await player.stop()
 
-            if self.skipsong != queue.latest():
-                self.skipsong == queue.latest
-                self.skipvoters = []
-
-            if ctx.author in self.skipvoters:
+            if ctx.author in queue.skiplist():
                 await ctx.send("You already voted to skip this song.")
                 return
 
-            self.skipvoters.append(ctx.author)
-            voterlen = len(self.skipvoters)
+            await ctx.send(f"You have voted, **{queue.voteskiplen() + 1}/{int((len(channel.members) - 1) // 1.5)}** remaining")
+            queue.voteskip(ctx.author)
 
-            await ctx.send(f"You have voted, **{voterlen}/{threshold}** remaining")
-
-            if voterlen >= threshold:
+            if queue.voteskiplen() >= (len(channel.members) - 1) // 1.5:
                 queue.skip(1)
                 await ctx.send(f":track_next: Skipping song...")
                 await player.stop() #check this later with multiple people
