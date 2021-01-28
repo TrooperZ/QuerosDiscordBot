@@ -26,48 +26,18 @@ class BotInfo(commands.Cog):
 	@commands.cooldown(rate=1, per=5, type=commands.BucketType.user)
 	async def botlink(self, ctx): 
 		"""My link!"""
-		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-		for i in channels:
-			channeloff = i['channels']
-			channelList.extend(channeloff)
-
-		if ctx.message.channel.id in channelList:
-			return
-
 		await ctx.send("Add Queros to your server today!\nhttps://discord.com/oauth2/authorize?client_id=760856635425554492&permissions=2146954871&scope=bot")
 
 	@commands.command()
 	@commands.cooldown(rate=1, per=5, type=commands.BucketType.user)
 	async def support(self, ctx):
 		"""Help for the bot"""
-		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-		for i in channels:
-			channeloff = i['channels']
-			channelList.extend(channeloff)
-
-		if ctx.message.channel.id in channelList:
-			return
-
 		await ctx.send("Join this server for bot support: https://discord.gg/7qvsUCBZ8W")
 
 	@commands.command()
 	@commands.cooldown(rate=1, per=5, type=commands.BucketType.user)
 	async def website(self, ctx):
 		"""Bot's website"""
-		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-		for i in channels:
-			channeloff = i['channels']
-			channelList.extend(channeloff)
-
-		if ctx.message.channel.id in channelList:
-			return
-
 		await ctx.send("We do not have a website yet.")
 
 	@commands.command()

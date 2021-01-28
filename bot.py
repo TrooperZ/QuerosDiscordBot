@@ -138,6 +138,6 @@ async def on_command_error(ctx, error):
         await ctx.send("You are missing the permissions to run this command.")
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.send("You are missing arguments in your command, check u.help [command] for the arguments.")
-    raise error
+    print(error)
 
 bot.run(os.getenv('DISCORD_TOKEN'), bot=True, reconnect=True)

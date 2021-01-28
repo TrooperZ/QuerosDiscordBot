@@ -16,6 +16,7 @@ import pymongo
 import PIL.Image
 import deeppyer
 from wand.image import Image 
+import re
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -73,14 +74,14 @@ class Fun(commands.Cog):
 
 	@commands.command()
 	@commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
-	async def deepfry(self, ctx): 
+	async def deepfry(self, ctx, user=None): 
 		"""Deepfries an image, must put command with uploaded image"""
 		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
 			cmdsList.extend(cmdOff)
-		if 'deepfryuser' in cmdsList:
+		if 'deepfry' in cmdsList:
 			return
 
 		channelList = ['0']
@@ -89,12 +90,29 @@ class Fun(commands.Cog):
 		for i in channels:
 			channeloff = i['channels']
 			channelList.extend(channeloff)
-
 		if ctx.message.channel.id in channelList:
 			return
-		for attachment in ctx.message.attachments:
-			await attachment.save("targetImgdp.png")
-			providedimage = PIL.Image.open("targetImgdp.png")
+
+		if user == None:
+			for attachment in ctx.message.attachments:
+				await attachment.save("targetImgdp.png")
+				providedimage = PIL.Image.open("targetImgdp.png")
+				image = await deeppyer.deepfry(providedimage, flares=False)
+				image.save("fryer.png")
+				pic = discord.File('fryer.png')
+				await ctx.send(file=pic)
+				return
+		else:
+			userID = re.sub('[^0-9]','', user)
+			try:
+				user = await ctx.guild.fetch_member(userID)
+			except:
+				await ctx.send("No user found.")
+				return
+
+			img = user.avatar_url_as()
+			await img.save("targetuserImgdp.png")
+			providedimage = PIL.Image.open("targetuserImgdp.png")
 			image = await deeppyer.deepfry(providedimage, flares=False)
 			image.save("fryer.png")
 			pic = discord.File('fryer.png')
@@ -128,62 +146,6 @@ class Fun(commands.Cog):
 						img.save(filename ="wavedimg.png") 
 			pic = discord.File('wavedimg.png')
 			await ctx.send(file=pic)
-		
-	@commands.command()
-	@commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
-	async def deepfryuser(self, ctx, user: discord.Member): 
-		"""Deepfries a user's profile pic"""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-		cmdsList = ['0']
-		for i in cmds:
-			cmdOff = i['commands']
-			cmdsList.extend(cmdOff)
-		if 'deepfryuser' in cmdsList:
-			return
-
-		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-		for i in channels:
-			channeloff = i['channels']
-			channelList.extend(channeloff)
-
-		if ctx.message.channel.id in channelList:
-			return
-
-		img = user.avatar_url_as()
-		await img.save("targetuserImgdp.png")
-		providedimage = PIL.Image.open("targetuserImgdp.png")
-		image = await deeppyer.deepfry(providedimage, flares=False)
-		image.save("fryer.png")
-		pic = discord.File('fryer.png')
-		await ctx.send(file=pic)
-
-	@commands.command()
-	@commands.cooldown(rate=1, per=3.0, type=commands.BucketType.user)
-	async def pingy(self, ctx):
-		"""Pings a random online user"""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-		cmdsList = ['0']
-		for i in cmds:
-			cmdOff = i['commands']
-			cmdsList.extend(cmdOff)
-		if 'pingy' in cmdsList:
-			return
-		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-		for i in channels:
-			channeloff = i['channels']
-			channelList.extend(channeloff)
-
-		if ctx.message.channel.id in channelList:
-			return
-		user = random.choice(ctx.guild.members) #gets a random user
-			
-		while user.status == discord.Status.offline or user.bot == True:
-			user = random.choice(ctx.guild.members)
-		await ctx.send(f'{user.mention} come join the fun!')
 
 	@commands.command()
 	@commands.cooldown(rate=1, per=2.0, type=commands.BucketType.user)
@@ -205,6 +167,11 @@ class Fun(commands.Cog):
 
 		if ctx.message.channel.id in channelList:
 			return
+		print(message)
+		if re.search("<@(!?&)([0-9]*)>", message) != None:
+			await ctx.send("Queros cannot bypass mention permissions.")
+			return
+
 		await ctx.message.delete()
 		await ctx.send(message)
 
@@ -233,7 +200,9 @@ class Fun(commands.Cog):
 			f"{user.mention} tripped and fell in the industrial blender.",
 			f"{user.mention} got poisoned by {ctx.message.author.mention}",
 			f"{user.mention} has been eliminated. Well done Agent 47, proceed to the extraction point.",
-			f"*chk chik* **BOOM!** {user.mention}'s guts just got splattered on the wall by {ctx.message.author.mention}"]
+			f"*chk chik* **BOOM!** {user.mention}'s guts just got splattered on the wall by {ctx.message.author.mention}"
+			f"{user.mention} was skooter ankled."
+			]
 
 		await ctx.send(random.choice(kill_choices))
 
