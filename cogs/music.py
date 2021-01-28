@@ -283,7 +283,7 @@ class Music(commands.Cog):
             except:
                 return True
 
-            AdminCmd = ['summon', 'forceleave', 'equalizer', 'clearqueue', 'volume',
+            AdminCmd = ['summon', 'equalizer', 'clearqueue', 'volume',
                         'playskip', 'playtop', 'skipover', 'shuffle', 'stop']
 
             if "dj" in [y.name.lower() for y in ctx.author.roles] or ctx.author.guild_permissions.manage_channels:
@@ -510,39 +510,25 @@ class Music(commands.Cog):
     async def leave(self, ctx):
         """Leave the bots current voice channel."""
         player = self.bot.wavelink.get_player(ctx.guild.id)
+        queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
 
         if ctx.author.voice == None:
             await ctx.send("Join a VC, **NOW!**")
             return
         
         if player.is_playing:
+            if ctx.author.guild_permissions.manage_channels:
+                queue.clear()
+                await player.destroy()
+                queue.clear()
+                await ctx.send(":door: Leaving the voice channel...")
+                return
+
             await ctx.send(":x: The bot is in use right now. Please use u.forceleave or wait until it is finished.")
             return
-
-        queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
         queue.clear()
-            
         await player.destroy()
         queue.clear()
-
-        await ctx.send(":door: Leaving the voice channel...")
-
-    @commands.command()
-    @disabledCmd_check()
-    async def forceleave(self, ctx):
-        """Force leaves the bots current voice channel."""
-        player = self.bot.wavelink.get_player(ctx.guild.id)
-
-        if ctx.author.voice == None:
-            await ctx.send("Join a VC, **NOW!**")
-            return
-        
-        queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
-        queue.clear()
-            
-        await player.destroy()
-        queue.clear()
-
         await ctx.send(":door: Leaving the voice channel...")
 
     @commands.command(aliases=['eq', 'equalizer'], name="equalizer (<:silverstar11:794770265657442347> Qu+ Server)")
