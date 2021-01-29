@@ -48,15 +48,13 @@ class BotInfo(commands.Cog):
 		hours, remainder = divmod(int(delta_uptime.total_seconds()), 3600)
 		minutes, seconds = divmod(remainder, 60)
 		days, hours = divmod(hours, 24)
-		
-		author = await self.bot.fetch_user(390841378277425153)
 
 		memory = psutil.virtual_memory()
 
 		uptime = f"{days}d, {hours}h, {minutes}m, {seconds}s"
 		embed=discord.Embed(title="Queros Information", description="Info about creator and bot status")
-		embed.set_author(name=str(author), icon_url=author.avatar_url)
 		embed.add_field(name="Uptime:", value=uptime, inline=True)
+		embed.add_field(name="Creator:", value="TrooperZ#7824", inline=True)
 		embed.add_field(name="Total Users", value=str(len(set(self.bot.users))), inline=True)
 		embed.add_field(name="Total Servers", value=str(len(self.bot.guilds)), inline=True)
 		embed.add_field(name="Language Used", value="Python, using discord.py", inline=True)
