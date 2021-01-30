@@ -118,7 +118,7 @@ class songdata(commands.Cog): #song data retrevial part
     def __init__(self, bot):
         self.bot = bot
         
-    async def songdata(self, query, guild_id, requester, type): #gets the song and returns an embed + adds it to queue
+    async def songdata(self, query, guild_id, requester, type: str): #gets the song and returns an embed + adds it to queue
         url_rx = re.compile(r'https?://(?:www\.)?.+') #just a filtering thing
 
         if url_rx.match(query) and "playlist" in query: #checks for playlist
@@ -126,7 +126,7 @@ class songdata(commands.Cog): #song data retrevial part
 
             #embed for playlist
             embed = discord.Embed(title=f":musical_note:  Playlist added", description=f"Adding {len(playlist.tracks)} songs.", color=0x6bd5ff)
-            embed.add_field(name="Requested By:", value=f"{requester.mention}")
+            embed.add_field(name="Requested By:", value=f"e{requester.mention}")
             embed.set_author(name=requester.name, icon_url=requester.avatar_url)
 
             for track in playlist.tracks: #adds each track to list
@@ -157,17 +157,14 @@ class songdata(commands.Cog): #song data retrevial part
             embed.add_field(name="Duration", value=f"{durationTrack}", inline=True)
 
             queue = await self.bot.QueueSystem.get_queue(guild_id)
-            pos = str(len(queue.data())) #gets song position in queue
-
-            if pos == '0': #prevents added to queue embed by returning None as position, which errors out
-                return None
-
-            embed.add_field(name="Position", value=f"{pos}", inline=True)
+            pos = len(queue.data()) #gets song position in queue
 
             if type == "top":
                 queue.addtop(track, requester)
                 return embed
             if type == "play":
+                if pos > 0:
+                    embed.add_field(name="Position", value=f"{pos}", inline=True)
                 queue.add(track, requester)
                 return embed
 
@@ -186,17 +183,14 @@ class songdata(commands.Cog): #song data retrevial part
             embed.add_field(name="Duration", value=f"{durationTrack}", inline=True)
 
             queue = await self.bot.QueueSystem.get_queue(guild_id)
-            pos = str(len(queue.data()))
-
-            if pos == '0':
-                return None
-
-            embed.add_field(name="Position", value=f"{pos}", inline=True)
+            pos = len(queue.data())
 
             if type == "top":
                 queue.addtop(track, requester)
                 return embed
             if type == "play":
+                if pos > 0:
+                    embed.add_field(name="Position", value=f"{pos}", inline=True)
                 queue.add(track, requester)
                 return embed
    
@@ -223,31 +217,6 @@ class Music(commands.Cog):
             player = self.bot.wavelink.get_player(ctx.guild.id)
             channel = self.bot.get_channel(player.channel_id)
 
-            if ctx.author.voice == None:
-                await ctx.send("Join a VC, **NOW!**")
-            return
-
-            try:
-                members = channel.members - 1
-            except:
-                return True
-
-            AdminCmd = ['summon', 'equalizer', 'clearqueue', 'volume',
-                        'playskip', 'playtop', 'skipover', 'shuffle', 'stop']
-
-            if "dj" in [y.name.lower() for y in ctx.author.roles] or ctx.author.guild_permissions.manage_channels:
-                return True
-            elif members == 1:
-                return True
-            else:
-                if ctx.invoked_with in AdminCmd:
-                    raise dj_perm_error()
-                else:
-                    return 
-
-    def disabledCmd_check():
-        # Checks for disabled channel/command
-        def predicate(ctx):
             cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
             cmdsList = ['0']
 
@@ -286,11 +255,28 @@ class Music(commands.Cog):
             else:
                 raise disabledCommand_error()
 
-        return commands.check(predicate)
+            if ctx.author.voice == None:
+                await ctx.send("Join a VC, **NOW!**")
+            return
 
-    def premiumUser():
-        # Checks for premium server
-        def predicate(ctx):
+            try:
+                members = channel.members - 1
+            except:
+                return True
+
+            AdminCmd = ['summon', 'equalizer', 'clearqueue', 'volume',
+                        'playskip', 'playtop', 'skipover', 'shuffle', 'stop']
+
+            if "dj" in [y.name.lower() for y in ctx.author.roles] or ctx.author.guild_permissions.manage_channels:
+                return True
+            elif members == 1:
+                return True
+            else:
+                if ctx.invoked_with in AdminCmd:
+                    raise dj_perm_error()
+                else:
+                    return 
+
             server = self.premServercol.find({'server':ctx.guild.id})
             status = 'off'
 
@@ -302,8 +288,6 @@ class Music(commands.Cog):
 
             else:
                 raise premiumServer_error()
-
-        return commands.check(predicate)
 
 
     @tasks.loop(seconds=90) #if bot is inactive for 1.5 minutes, it leaves
@@ -372,7 +356,6 @@ class Music(commands.Cog):
 
 
     @commands.command(aliases=['connect'])
-    @disabledCmd_check()
     async def join(self, ctx):
         """Join the users current voice channel. If the bot is in use, it will not join."""
         player = self.bot.wavelink.get_player(ctx.guild.id)
@@ -395,7 +378,6 @@ class Music(commands.Cog):
             await player.connect(ctx.author.voice.channel.id)
 
     @commands.command(aliases=['nowplaying'])
-    @disabledCmd_check()
     async def now(self, ctx):
         """Displays the current song that is playing"""
         player = self.bot.wavelink.get_player(ctx.guild.id)
@@ -427,7 +409,6 @@ class Music(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
-    @disabledCmd_check()
     async def summon(self, ctx, *, channel: discord.VoiceChannel=None):
         """Moves the bot to another VC (need Manage Channels perms)"""
         if not channel:
@@ -445,7 +426,6 @@ class Music(commands.Cog):
         await player.connect(channel.id)
         
     @commands.command(aliases=["quit", "disconnect"])
-    @disabledCmd_check()
     async def leave(self, ctx):
         """Leave the bots current voice channel."""
         player = self.bot.wavelink.get_player(ctx.guild.id)
@@ -461,14 +441,7 @@ class Music(commands.Cog):
 
             await ctx.send(":x: The bot is in use right now. Please have a DJ or someone with permissions kick the bot.")
             return
-        queue.clear()
-        await player.destroy()
-        queue.clear()
-        await ctx.send(":door: Leaving the voice channel...")
-
     @commands.command(aliases=['eq', 'equalizer'], name="equalizer (<:silverstar11:794770265657442347> Qu+ Server)")
-    @disabledCmd_check()
-    @premiumUser()
     async def equalizer(self, ctx, type:str):
         """Sets the equalizer for the player.
         flat = Resets your EQ to Flat (resets it)
@@ -494,7 +467,6 @@ class Music(commands.Cog):
         await ctx.send(f":control_knobs: Setting EQ to **{type}**...")
 
     @commands.command()
-    @disabledCmd_check()
     async def seek(self, ctx, *, seek):
         """Seek the current song to hh:mm:ss."""
 
@@ -535,7 +507,6 @@ class Music(commands.Cog):
         await ctx.send("Seeked to `{}` out of `{}`".format(time.strftime('%H:%M:%S', time.gmtime(res)), time.strftime('%H:%M:%S', time.gmtime(player.current.duration / 1000))))
 
     @commands.command(aliases=["emptyqueue", "clearq", "emptyq"]) 
-    @disabledCmd_check()
     async def clearqueue(self, ctx):
         """Clears the queue for the bot."""
         try:
@@ -565,8 +536,6 @@ class Music(commands.Cog):
     #    await ctx.send("Your queue will now loop 1 time.")
     
     @commands.command(aliases=['vol', 'volume'], name="volume (<:silverstar1:794770265657442347> Qu+ Server)")
-    @disabledCmd_check()
-    @premiumUser()
     async def volume(self, ctx, *, volume: int):
         """Set the volume. Volume above 100 causes earrape."""
 
@@ -595,23 +564,18 @@ class Music(commands.Cog):
             return
 
     @commands.command()
-    @disabledCmd_check()
     async def play(self, ctx, *, query):
         """Play a song of your choice. Searching, playlists, and URLs are supported."""
         player = self.bot.wavelink.get_player(ctx.guild.id)
-
+        queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
         if not player.is_connected:
             await ctx.invoke(self.bot.get_command('join'))
 
-        try:
+        if len(queue.data()) > 0:
             await ctx.send(embed=await self.bot.get_cog('songdata').songdata(query, ctx.guild.id, ctx.author, "play"))
-
-        except:
-            pass
-
-        queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
-        channel = await self.bot.QueueSystem.get_channel(ctx.guild.id)
-
+        else:
+            await self.bot.get_cog('songdata').songdata(query, ctx.guild.id, ctx.author, "play")
+      
         while True:
             try:
                 song = queue.latest()
@@ -641,7 +605,6 @@ class Music(commands.Cog):
                 pass
 
     @commands.command()
-    @disabledCmd_check()
     async def playskip(self, ctx, *, query):
         """Skips and plays a song of your choice. Searching, playlists, and URLs are supported."""
         player = self.bot.wavelink.get_player(ctx.guild.id)
@@ -662,12 +625,11 @@ class Music(commands.Cog):
 
         await ctx.send(f":track_next: Skipping and playing requested song...")
 
-        await self.bot.get_cog('songdata').songdata_addtop(query, ctx.guild.id, ctx.author)
+        await self.bot.get_cog('songdata').songdata_addtop(query, ctx.guild.id, ctx.author, "play")
         queue.skip(1)
         await player.stop()
 
     @commands.command()
-    @disabledCmd_check()
     async def playtop(self, ctx, *, query):
         """Puts a song at the top of the queue. Searching, playlists, and URLs are supported."""
         player = self.bot.wavelink.get_player(ctx.guild.id)
@@ -690,7 +652,6 @@ class Music(commands.Cog):
         await ctx.send(embed=await self.bot.get_cog('songdata').songdata(query, ctx.guild.id, ctx.author, "top"))
 
     @commands.command()
-    @disabledCmd_check()
     async def skip(self, ctx):
         """Skip the currently playing song."""
         queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
@@ -723,7 +684,6 @@ class Music(commands.Cog):
                 await player.stop() #check this later with multiple people
 
     @commands.command()
-    @disabledCmd_check()
     async def skipover(self, ctx, amt=1):
         """Skip but overrides voting, use u.skipover amt to skip a number of songs."""
         queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
@@ -737,7 +697,6 @@ class Music(commands.Cog):
         await player.stop()
 
     @commands.command()
-    @disabledCmd_check()
     async def shuffle(self, ctx):
         """Mixes up the songs in the queue"""
 
@@ -749,7 +708,6 @@ class Music(commands.Cog):
         await ctx.send(":twisted_rightwards_arrows: Shuffling queue...")
 
     @commands.command()
-    @disabledCmd_check()
     async def remove(self, ctx, pos: int):
         """Removes a song from the specified position."""
         queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
@@ -776,7 +734,6 @@ class Music(commands.Cog):
             return      
         
     @commands.command()
-    @disabledCmd_check()
     async def pause(self, ctx):
         """Pause or resume the music player."""
         queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
@@ -803,7 +760,6 @@ class Music(commands.Cog):
             await ctx.send(f":pause_button: Pausing current song.")
             
     @commands.command()
-    @disabledCmd_check()
     async def queue(self, ctx, page=1):
         """Gets the queue of the songs."""
         queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
@@ -848,7 +804,6 @@ class Music(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command()
-    @disabledCmd_check()
     async def stop(self, ctx):
         """Stops and clears the queue."""
         queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
