@@ -12,18 +12,8 @@ import time
 import os 
 import random 
 import re 
-import pymongo 
 import math 
 from dotenv import load_dotenv 
-
-load_dotenv() 
-
-MONGO_PASS = os.getenv('MONGO_PASS')
-myclient = pymongo.MongoClient("mongodb+srv://queroscode:" + MONGO_PASS + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority")
-
-mydb = myclient["data"]
-configcol = mydb["configs"]
-premServercol = mydb["vipServers"] 
 
 class QueueSystem(commands.Cog):
     def __init__(self, bot):
@@ -225,6 +215,8 @@ class Music(commands.Cog):
     
     def __init__(self, bot):
         self.bot = bot 
+        self.configcol = self.bot.mongodatabase["configs"]
+        self.premServercol = self.bot.mongodatabase["vipServers"] 
 
 
     async def cog_check(self, ctx):
@@ -256,7 +248,7 @@ class Music(commands.Cog):
     def disabledCmd_check():
         # Checks for disabled channel/command
         def predicate(ctx):
-            cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+            cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
             cmdsList = ['0']
 
             for i in cmds:
@@ -271,7 +263,7 @@ class Music(commands.Cog):
                     raise disabledCommand_error()
 
             channelList = ['0']
-            channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+            channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
             for i in channels:
                 channeloff = i['channels']
@@ -282,7 +274,7 @@ class Music(commands.Cog):
             else:
                     raise disabledCommand_error()
 
-            categories = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'categoryoff'}]})
+            categories = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'categoryoff'}]})
             catList = ['0']
 
             for i in categories:
@@ -299,7 +291,7 @@ class Music(commands.Cog):
     def premiumUser():
         # Checks for premium server
         def predicate(ctx):
-            server = premServercol.find({'server':ctx.guild.id})
+            server = self.premServercol.find({'server':ctx.guild.id})
             status = 'off'
 
             for x in server:

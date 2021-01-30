@@ -12,19 +12,10 @@ from bs4 import BeautifulSoup
 import urllib.request
 import discord
 from discord.ext import commands
-import pymongo
 import PIL.Image
 import deeppyer
 from wand.image import Image 
 import re
-from dotenv import load_dotenv
-
-load_dotenv()
-
-MONGO_PASS = os.getenv('MONGO_PASS')
-myclient = pymongo.MongoClient("mongodb+srv://queroscode:" + MONGO_PASS + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority")
-mydb = myclient["data"]
-configcol = mydb["configs"]
  
 reddit = praw.Reddit(client_id=os.getenv('REDDIT_CLIENT_ID'), 
 					 client_secret=os.getenv('REDDIT_API_KEY'),
@@ -36,12 +27,13 @@ class Fun(commands.Cog):
 	"""Have lots of laughs with these commands!"""
 	def __init__(self, bot):
 		self.bot = bot
+		self.configcol = self.bot.mongodatabase["configs"]
 
 	@commands.command()
 	@commands.cooldown(rate=1, per=3.0, type=commands.BucketType.user)
 	async def meme(self, ctx): 
 		"""Sends a meme fresh from reddit"""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
@@ -50,7 +42,7 @@ class Fun(commands.Cog):
 			return
 
 		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
 		for i in channels:
 			channeloff = i['channels']
@@ -76,7 +68,7 @@ class Fun(commands.Cog):
 	@commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
 	async def deepfry(self, ctx, user=None): 
 		"""Deepfries an image, must put command with uploaded image"""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
@@ -85,7 +77,7 @@ class Fun(commands.Cog):
 			return
 
 		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
 		for i in channels:
 			channeloff = i['channels']
@@ -122,7 +114,7 @@ class Fun(commands.Cog):
 	@commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
 	async def waveify(self, ctx, height = 32, width = 4): 
 		"""Adds wave effect to an image, must put command with uploaded image"""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
@@ -131,7 +123,7 @@ class Fun(commands.Cog):
 			return
 
 		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
 		for i in channels:
 			channeloff = i['channels']
@@ -147,39 +139,11 @@ class Fun(commands.Cog):
 			pic = discord.File('wavedimg.png')
 			await ctx.send(file=pic)
 
-	@commands.command()
-	@commands.cooldown(rate=1, per=2.0, type=commands.BucketType.user)
-	async def say(self, ctx, *, message: str):
-		"""Says whatever crap you want"""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-		cmdsList = ['0']
-		for i in cmds:
-			cmdOff = i['commands']
-			cmdsList.extend(cmdOff)
-		if 'say' in cmdsList:
-			return
-		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-		for i in channels:
-			channeloff = i['channels']
-			channelList.extend(channeloff)
-
-		if ctx.message.channel.id in channelList:
-			return
-		print(message)
-		if re.search("<@(!?&)([0-9]*)>", message) != None:
-			await ctx.send("Queros cannot bypass mention permissions.")
-			return
-
-		await ctx.message.delete()
-		await ctx.send(message)
-
 	@commands.command(aliases=['murder'])
 	@commands.cooldown(rate=1, per=1.0, type=commands.BucketType.user)
 	async def kill(self, ctx, user: discord.Member):
 		"""Eliminates a user of your choice."""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
@@ -187,7 +151,7 @@ class Fun(commands.Cog):
 		if 'kill' in cmdsList:
 			return
 		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
 		for i in channels:
 			channeloff = i['channels']
@@ -210,7 +174,7 @@ class Fun(commands.Cog):
 	@commands.cooldown(rate=1, per=3.0, type=commands.BucketType.user)
 	async def redditgrab(self, ctx, subreddit: str, spoiler='no'):
 		"""Grabs a post from reddit subreddit, add spoiler to make the image a spoiler"""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
@@ -218,7 +182,7 @@ class Fun(commands.Cog):
 		if 'redditgrab' in cmdsList:
 			return
 		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
 		for i in channels:
 			channeloff = i['channels']
@@ -275,7 +239,7 @@ class Fun(commands.Cog):
 	@commands.cooldown(rate=1, per=1.0, type=commands.BucketType.user)
 	async def eightB(self, ctx: commands.Context, *, query: str):
 		"""Eight Ball shall tell your future"""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
@@ -285,7 +249,7 @@ class Fun(commands.Cog):
 		elif 'eightB' in cmdsList: 
 			return
 		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
 		for i in channels:
 			channeloff = i['channels']

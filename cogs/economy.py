@@ -1,33 +1,22 @@
 import discord
 import os
-import pymongo
 import re
 import random
 from discord.ext import commands
-from dotenv import load_dotenv
-
-load_dotenv()
-
-
-
-MONGO_PASS = os.getenv('MONGO_PASS')
-myclient = pymongo.MongoClient("mongodb+srv://queroscode:" + MONGO_PASS + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority")
-mydb = myclient["data"]
-balcol = mydb['balances']
-configcol = mydb['configuration']
-
 
 class Economy(commands.Cog):
 	"""Fun little economy game!"""
 	def __init__(self, bot):
 		#Initalizes bot.
 		self.bot = bot
+		self.balcol = self.bot.mongodatabase['balances']
+		self.configcol = self.bot.mongodatabase['configuration']
 
 	@commands.command()
 	@commands.cooldown(rate=1, per=20.0, type=commands.BucketType.user)
 	async def bankopen(self, ctx):
 		"""Opens a bank for your cash"""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
@@ -36,7 +25,7 @@ class Economy(commands.Cog):
 			return
 
 		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
 		for i in channels:
 			channeloff = i['channels']
@@ -45,18 +34,18 @@ class Economy(commands.Cog):
 		if ctx.message.channel.id in channelList:
 			return
 
-		if balcol.count({'user':ctx.message.author.id}) > 0:
+		if self.balcol.count({'user':ctx.message.author.id}) > 0:
 			await ctx.send("You already have a bank, get lost!")
 			return
 
-		balcol.insert_one({'user':ctx.message.author.id, 'wallet':0, 'safe':0})
+		self.balcol.insert_one({'user':ctx.message.author.id, 'wallet':0, 'safe':0})
 		await ctx.send(ctx.author.mention + ", you have opened a bank! Do u.bal to check your balance.")
 
 	@commands.command(aliases=['bal'])
 	@commands.cooldown(rate=1, per=3.0, type=commands.BucketType.user)
 	async def balance(self, ctx, user=None):
 		"""Gets balance"""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
@@ -65,7 +54,7 @@ class Economy(commands.Cog):
 			return
 
 		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
 		for i in channels:
 			channeloff = i['channels']
@@ -85,7 +74,7 @@ class Economy(commands.Cog):
 				return
 
 		print(user)
-		balance = balcol.find({'user':user.id})
+		balance = self.balcol.find({'user':user.id})
 		userStr = user.name
 
 		for x in balance:
@@ -109,7 +98,7 @@ class Economy(commands.Cog):
 	@commands.cooldown(rate=1, per=120.0, type=commands.BucketType.user)
 	async def forage(self, ctx):
 		"""Looks for coins"""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
@@ -118,7 +107,7 @@ class Economy(commands.Cog):
 			return
 
 		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
 		for i in channels:
 			channeloff = i['channels']
@@ -127,13 +116,13 @@ class Economy(commands.Cog):
 		if ctx.message.channel.id in channelList:
 			return
 		randomCoins = random.randint(1,100)
-		balance = balcol.find({'user':ctx.message.author.id})
+		balance = self.balcol.find({'user':ctx.message.author.id})
 
 		for x in balance:
 			wallet = int(x['wallet'])
 
 		try:
-			balcol.update_one({'user':ctx.message.author.id}, {"$set": {'wallet':wallet + randomCoins}}, upsert=False)
+			self.balcol.update_one({'user':ctx.message.author.id}, {"$set": {'wallet':wallet + randomCoins}}, upsert=False)
 
 		except UnboundLocalError:
 			await ctx.send("Hmm, no bank found. Open a bank by using u.bankopen!")
@@ -145,7 +134,7 @@ class Economy(commands.Cog):
 	@commands.cooldown(rate=1, per=15.0, type=commands.BucketType.user)
 	async def deposit(self, ctx, amt='all'):
 		"""Deposits wallet"""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
@@ -154,7 +143,7 @@ class Economy(commands.Cog):
 			return
 
 		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
 		for i in channels:
 			channeloff = i['channels']
@@ -162,7 +151,7 @@ class Economy(commands.Cog):
 
 		if ctx.message.channel.id in channelList:
 			return
-		balance = balcol.find({'user':ctx.message.author.id})
+		balance = self.balcol.find({'user':ctx.message.author.id})
 
 		for x in balance:
 			wallet = int(x['wallet'])
@@ -183,8 +172,8 @@ class Economy(commands.Cog):
 			return
 
 		try:
-			balcol.update_one({'user':ctx.message.author.id}, {"$set": {'safe':bank + depAmt}}, upsert=False)
-			balcol.update_one({'user':ctx.message.author.id}, {"$set": {'wallet':wallet - depAmt}}, upsert=False)
+			self.balcol.update_one({'user':ctx.message.author.id}, {"$set": {'safe':bank + depAmt}}, upsert=False)
+			self.balcol.update_one({'user':ctx.message.author.id}, {"$set": {'wallet':wallet - depAmt}}, upsert=False)
 
 		except UnboundLocalError:
 			await ctx.send("Hmm, no bank found. Open a bank by using u.bankopen!")
@@ -196,7 +185,7 @@ class Economy(commands.Cog):
 	@commands.cooldown(rate=1, per=15.0, type=commands.BucketType.user)
 	async def withdraw(self, ctx, amt='all'):
 		"""Withdraws to wallet"""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
@@ -205,7 +194,7 @@ class Economy(commands.Cog):
 			return
 
 		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
 		for i in channels:
 			channeloff = i['channels']
@@ -213,7 +202,7 @@ class Economy(commands.Cog):
 
 		if ctx.message.channel.id in channelList:
 			return
-		balance = balcol.find({'user':ctx.message.author.id})
+		balance = self.balcol.find({'user':ctx.message.author.id})
 
 		for x in balance:
 			wallet = int(x['wallet'])
@@ -234,8 +223,8 @@ class Economy(commands.Cog):
 			return
 
 		try:
-			balcol.update_one({'user':ctx.message.author.id}, {"$set": {'safe':bank - withAmt}}, upsert=False)
-			balcol.update_one({'user':ctx.message.author.id}, {"$set": {'wallet':wallet + withAmt}}, upsert=False)
+			self.balcol.update_one({'user':ctx.message.author.id}, {"$set": {'safe':bank - withAmt}}, upsert=False)
+			self.balcol.update_one({'user':ctx.message.author.id}, {"$set": {'wallet':wallet + withAmt}}, upsert=False)
 
 		except UnboundLocalError:
 			await ctx.send("Hmm, no bank found. Open a bank by using u.bankopen!")
@@ -247,7 +236,7 @@ class Economy(commands.Cog):
 	@commands.cooldown(rate=1, per=86400, type=commands.BucketType.user)
 	async def daily(self, ctx, amt='all'):
 		"""Grabs daily rations"""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
@@ -256,7 +245,7 @@ class Economy(commands.Cog):
 			return
 
 		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
 		for i in channels:
 			channeloff = i['channels']
@@ -264,12 +253,12 @@ class Economy(commands.Cog):
 
 		if ctx.message.channel.id in channelList:
 			return
-		balance = balcol.find({'user':ctx.message.author.id})
+		balance = self.balcol.find({'user':ctx.message.author.id})
 		for x in balance:
 			wallet = int(x['wallet'])
 
 		try:
-			balcol.update_one({'user':ctx.message.author.id}, {"$set": {'wallet':wallet + 2000}}, upsert=False)
+			self.balcol.update_one({'user':ctx.message.author.id}, {"$set": {'wallet':wallet + 2000}}, upsert=False)
 
 		except UnboundLocalError:
 			await ctx.send("Hmm, no bank found. Open a bank by using u.bankopen!")
@@ -281,7 +270,7 @@ class Economy(commands.Cog):
 	@commands.cooldown(rate=1, per=15, type=commands.BucketType.user)
 	async def bet(self, ctx, amt=45):
 		"""Bets money. Need at least 100 coins"""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
@@ -290,7 +279,7 @@ class Economy(commands.Cog):
 			return
 
 		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
 		for i in channels:
 			channeloff = i['channels']
@@ -302,7 +291,7 @@ class Economy(commands.Cog):
 			await ctx.send("Please bet more than **100** QuCoins.")
 			return
 
-		balance = balcol.find({'user':ctx.message.author.id})
+		balance = self.balcol.find({'user':ctx.message.author.id})
 
 		for x in balance:
 			wallet = int(x['wallet'])
@@ -324,7 +313,7 @@ class Economy(commands.Cog):
 				embed = discord.Embed(title="Betting **" + str(amt) + "** QuCoins", color=0xFF0000)
 				embed.set_author(name="Economy\n")
 
-				balcol.update_one({'user':ctx.message.author.id}, {"$set": {'wallet':wallet - lostAmt}}, upsert=False)
+				self.balcol.update_one({'user':ctx.message.author.id}, {"$set": {'wallet':wallet - lostAmt}}, upsert=False)
 				embed.add_field(name="You Lost", value="`" + str(lostAmt) + "` QuCoins", inline=True)
 
 				await ctx.send(embed=embed)
@@ -337,7 +326,7 @@ class Economy(commands.Cog):
 				embed.set_author(name="Economy\n")
 
 				embed.add_field(name="You Won", value="`" + str(WonAmt) + "` QuCoins", inline=True)
-				balcol.update_one({'user':ctx.message.author.id}, {"$set": {'wallet':wallet + WonAmt}}, upsert=False)
+				self.balcol.update_one({'user':ctx.message.author.id}, {"$set": {'wallet':wallet + WonAmt}}, upsert=False)
 
 				await ctx.send(embed=embed)
 				return
@@ -359,7 +348,7 @@ class Economy(commands.Cog):
 	@commands.cooldown(rate=1, per=8, type=commands.BucketType.user)
 	async def pay(self, ctx, user: discord.Member, amt: int):
 		"""Gives coins to someone"""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
@@ -368,7 +357,7 @@ class Economy(commands.Cog):
 			return
 
 		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
 		for i in channels:
 			channeloff = i['channels']
@@ -376,8 +365,8 @@ class Economy(commands.Cog):
 
 		if ctx.message.channel.id in channelList:
 			return
-		balance = balcol.find({'user':ctx.message.author.id})
-		giver = balcol.find({'user':user.id})
+		balance = self.balcol.find({'user':ctx.message.author.id})
+		giver = self.balcol.find({'user':user.id})
 
 		for x in balance:
 			wallet = int(x['wallet'])
@@ -397,8 +386,8 @@ class Economy(commands.Cog):
 			return
 
 		try:
-			balcol.update_one({'user':ctx.message.author.id}, {"$set": {'wallet':wallet - giveamt}}, upsert=False)
-			balcol.update_one({'user':user.id}, {"$set": {'wallet':wallet + giveamt}}, upsert=False)
+			self.balcol.update_one({'user':ctx.message.author.id}, {"$set": {'wallet':wallet - giveamt}}, upsert=False)
+			self.balcol.update_one({'user':user.id}, {"$set": {'wallet':wallet + giveamt}}, upsert=False)
 
 		except UnboundLocalError:
 			await ctx.send("Hmm, no bank found. Open a bank by using u.bankopen!")
@@ -410,7 +399,7 @@ class Economy(commands.Cog):
 	@commands.cooldown(rate=1, per=120, type=commands.BucketType.user)
 	async def steal(self, ctx, user: discord.Member):
 		"""Robs a person"""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
@@ -419,7 +408,7 @@ class Economy(commands.Cog):
 			return
 
 		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
 		for i in channels:
 			channeloff = i['channels']
@@ -431,8 +420,8 @@ class Economy(commands.Cog):
 			await ctx.send("You rob yourself and find out that you're poor. :|")
 			return
 
-		balance = balcol.find({'user':ctx.message.author.id})
-		robbee = balcol.find({'user':user.id})
+		balance = self.balcol.find({'user':ctx.message.author.id})
+		robbee = self.balcol.find({'user':user.id})
 
 		for x in balance:
 			wallet = int(x['wallet'])
@@ -453,15 +442,15 @@ class Economy(commands.Cog):
 		try:
 			if coinflip == 1:
 				robamt = random.randint(1, round(rwallet*0.55))
-				balcol.update_one({'user':ctx.message.author.id}, {"$set": {'wallet':wallet + robamt}}, upsert=False)
-				balcol.update_one({'user':user.id}, {"$set": {'wallet':wallet - robamt}}, upsert=False)
+				self.balcol.update_one({'user':ctx.message.author.id}, {"$set": {'wallet':wallet + robamt}}, upsert=False)
+				self.balcol.update_one({'user':user.id}, {"$set": {'wallet':wallet - robamt}}, upsert=False)
 				await ctx.send(f"You stole **{robamt}** from {user.name}! Shh, keep it hush hush...")
 				return
 
 			else:
 				fine = random.randint(150, 750)
-				balcol.update_one({'user':ctx.message.author.id}, {"$set": {'wallet':wallet - fine}}, upsert=False)
-				balcol.update_one({'user':user.id}, {"$set": {'wallet':wallet + fine}}, upsert=False)
+				self.balcol.update_one({'user':ctx.message.author.id}, {"$set": {'wallet':wallet - fine}}, upsert=False)
+				self.balcol.update_one({'user':user.id}, {"$set": {'wallet':wallet + fine}}, upsert=False)
 				await ctx.send(f"You paid **{fine}** to {user.name} for getting caught, so much for being sneaky.")
 				return
 

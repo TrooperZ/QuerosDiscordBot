@@ -12,15 +12,7 @@ from dotenv import load_dotenv
 import wavelink
 
 load_dotenv()
-
-MONGO_PASS = os.getenv('MONGO_PASS')
-myclient = pymongo.MongoClient("mongodb+srv://queroscode:" + MONGO_PASS + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority")
-mydb = myclient["data"]
-configcol = mydb["configs"]
-modcol = mydb["moderation"]
-premServercol = mydb["vipServers"]
-
-initial_extensions = ['cogs.utillity', 'cogs.fun', 'cogs.configuration', 'cogs.moderation', 'cogs.economy', 'cogs.botinfo', 'cogs.music']
+mongoclient = pymongo.MongoClient("mongodb+srv://queroscode:" + os.getenv('MONGO_PASS') + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority")
 
 intervals = (
     ('weeks', 604800),  # 60 * 60 * 24 * 7
@@ -45,81 +37,43 @@ intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='u.', intents=intents, help_command=PrettyHelp())
 bot.help_command = PrettyHelp(color=0x6bd5ff, active=60, verify_checks=False)
 bot.wavelink = wavelink.Client(bot=bot)
+bot.mongodatabase = mongoclient["data"]
+
+
+configcol = bot.mongodatabase["configs"]
+modcol = bot.mongodatabase["moderation"]
+premServercol = bot.mongodatabase["vipServers"]
 
 @bot.command(hidden=True)
 async def addpremiumserver(ctx, serverid: int):
-    owner = await bot.fetch_user(390841378277425153)
-    if ctx.author != owner:
+    if not await bot.is_owner(ctx.author):
         return
     premServercol.insert_one({"server":ctx.guild.id})
     await ctx.send("done")
 
 @bot.command(hidden=True)
 async def delpremiumserver(ctx, serverid: int):
-    owner = await bot.fetch_user(390841378277425153)
-    if ctx.author != owner:
+    if not await bot.is_owner(ctx.author):
         return
     premServercol.delete_one({"server":ctx.guild.id})
     await ctx.send("done")
 
 @bot.command(hidden=True)
 async def getguilds(ctx):
-    owner = await bot.fetch_user(390841378277425153)
-    if ctx.author != owner:
+    if not await bot.is_owner(ctx.author):
         return
-    f = open("guilds.txt", "w")
     for i in bot.guilds:
-        f.write(i.name)
         await ctx.send(i.name)
-    f.close()
+
+@bot.command(hidden=True)
+async def reload_cog(ctx, cog: str):
+    if not await bot.is_owner(ctx.author):
+        return
+    bot.reload_extension(cog)
 
 if __name__ == '__main__':
-    for extension in initial_extensions:
+    for extension in ['cogs.utillity', 'cogs.fun', 'cogs.configuration', 'cogs.moderation', 'cogs.economy', 'cogs.botinfo', 'cogs.music']:
         bot.load_extension(extension)
-
-@bot.event
-async def on_message(message):
-    await bot.process_commands(message)
-    #profVal = configcol.find({"$and": [{"guild": message.guild.id}, {"cfg_type": 'profanity'}]})
-    #for x in profVal:
-    #    levelProf = str(x['level'])
-
-    #try:
-    #    if levelProf == 'on':                                                   #profanity config is disabled temporarly
-    #        if profanity.contains_profanity(message.content.lower()):
-    #            await message.delete()
-    #            warnmsg = await message.channel.send(f"{message.author.mention}, watch your language.")
-    #            await asyncio.sleep(10)
-    #            await warnmsg.delete()
-
-    #except UnboundLocalError:
-    #    return
-
-    if "pog" in message.content.lower():
-        if message.author.bot:
-            return
-        serversOn = configcol.find({"$and": [{"guild": message.guild.id}, {"cfg_type": 'pogToggle'}]})
-        for x in serversOn:
-            toggle = str(x['yN'])
-        try:
-            if toggle == 'on':
-                coinflip123 = random.randint(1,2)
-                if coinflip123 == 1:
-                    await message.channel.send(file=discord.File('pog1.gif'))
-                if coinflip123 == 2:
-                   await message.channel.send(file=discord.File('pog2.gif'))
-                return
-
-            elif toggle == 'off':
-                return
-
-        except UnboundLocalError:
-                coinflip123 = random.randint(1,2)
-                if coinflip123 == 1:
-                    await message.channel.send(file=discord.File('pogGifs/pog1.gif'))
-                if coinflip123 == 2:
-                   await message.channel.send(file=discord.File('pogGifs/pog2.gif'))
-                return
 
 @bot.event 
 async def on_ready():

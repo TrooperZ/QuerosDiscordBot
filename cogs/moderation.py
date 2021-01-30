@@ -1,4 +1,3 @@
-import pymongo
 import discord
 from discord.ext import commands
 from discord.ext import tasks
@@ -8,15 +7,7 @@ import asyncio
 from discord.ext.tasks import loop
 import os
 from bson.objectid import ObjectId
-from dotenv import load_dotenv
 import re
-
-load_dotenv()
-
-MONGO_PASS = os.getenv('MONGO_PASS')
-myclient = pymongo.MongoClient("mongodb+srv://queroscode:" + MONGO_PASS + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority")
-mydb = myclient["data"]
-modcol = mydb["moderation"]
 
 time_regex = re.compile(r"(\d{1,5}(?:[.,]?\d{1,5})?)([smhdw])")
 time_dict = {"h":3600, "s":1, "m":60, "d":86400, "w":604800}
@@ -64,10 +55,11 @@ class Moderation(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.modcol = self.bot.mongodatabase["moderation"]
 
     @tasks.loop(seconds=30.0)
     async def remove_inf(self):
-            cursor = modcol.find({})
+            cursor = self.modcol.find({})
             for document in cursor:
                     if document['status'] == 'finished':
                         continue
@@ -76,21 +68,21 @@ class Moderation(commands.Cog):
                             serverGuild = self.bot.get_guild(int(document['guildid']))
                             user = self.bot.get_user(int(document['userid']))
                             await serverGuild.unban(user)
-                            modcol.update_one({'_id': document['_id']}, {"$set": {'status': 'finished'}}, upsert=False)
+                            self.modcol.update_one({'_id': document['_id']}, {"$set": {'status': 'finished'}}, upsert=False)
 
                         elif document['infraction'] == 'Temp VC Mute':
                             serverGuild = self.bot.get_guild(int(document['guildid']))
                             userId = int(document['userid'])
                             user = await serverGuild.fetch_member(userId)
                             await user.edit(mute=False)
-                            modcol.update_one({'_id': document['_id']}, {"$set": {'status': 'finished'}}, upsert=False)
+                            self.modcol.update_one({'_id': document['_id']}, {"$set": {'status': 'finished'}}, upsert=False)
 
                         elif document['infraction'] == 'Temp Deafen':
                             serverGuild = self.bot.get_guild(int(document['guildid']))
                             userId = int(document['userid'])
                             user = await serverGuild.fetch_member(userId)
                             await user.edit(deafen=False)
-                            modcol.update_one({'_id': document['_id']}, {"$set": {'status': 'finished'}}, upsert=False)
+                            self.modcol.update_one({'_id': document['_id']}, {"$set": {'status': 'finished'}}, upsert=False)
 
                         elif document['infraction'] == 'Temp Chat Mute':
                             serverGuild = self.bot.get_guild(int(document['guildid']))
@@ -98,7 +90,7 @@ class Moderation(commands.Cog):
                             user = await serverGuild.fetch_member(userId)
                             role = discord.utils.get(serverGuild.roles, name='Muted')
                             await user.remove_roles(role)
-                            modcol.update_one({'_id': document['_id']}, {"$set": {'status': 'finished'}}, upsert=False)
+                            self.modcol.update_one({'_id': document['_id']}, {"$set": {'status': 'finished'}}, upsert=False)
             await asyncio.sleep(0.5)
 
 
@@ -133,7 +125,7 @@ class Moderation(commands.Cog):
 
          await user.kick(reason=reason)  
 
-         x = modcol.insert_one(kicklisting)
+         self.modcol.insert_one(kicklisting)
 
     @commands.command()
     @commands.has_permissions(ban_members=True)
@@ -163,7 +155,7 @@ class Moderation(commands.Cog):
 
         await user.ban(reason=reason)
 
-        x = modcol.insert_one(banlisting)
+        self.modcol.insert_one(banlisting)
 
     @commands.command()
     @commands.has_permissions(ban_members=True)
@@ -186,7 +178,7 @@ class Moderation(commands.Cog):
 
         await user.ban(reason=reason)
 
-        x = modcol.insert_one(banlisting)
+        self.modcol.insert_one(banlisting)
 
     @commands.command()
     @commands.has_permissions(ban_members=True)
@@ -238,7 +230,7 @@ class Moderation(commands.Cog):
             await ctx.channel.send(embed=vcmute)
             await user.send(embed=vcmute)
 
-            x = modcol.insert_one(vcmutelisting)
+            self.modcol.insert_one(vcmutelisting)
 
         except:
             await ctx.send("User is not connected to voice.")
@@ -264,7 +256,7 @@ class Moderation(commands.Cog):
         await ctx.channel.send(embed=vcmute)
         await user.send(embed=vcmute)
 
-        x = modcol.insert_one(vcmutelisting)
+        self.modcol.insert_one(vcmutelisting)
 
     @commands.command()
     @commands.has_guild_permissions(mute_members=True)
@@ -304,7 +296,7 @@ class Moderation(commands.Cog):
         await ctx.send(embed=deafen)
         await user.send(embed=deafen)
 
-        x = modcol.insert_one(deafenlisting)
+        self.modcol.insert_one(deafenlisting)
 
     @commands.command()
     @commands.has_guild_permissions(mute_members=True)
@@ -326,7 +318,7 @@ class Moderation(commands.Cog):
         await ctx.send(embed=deafen)
         await user.send(embed=deafen)
 
-        x = modcol.insert_one(deaflisting)
+        self.modcol.insert_one(deaflisting)
 
     @commands.command()
     @commands.has_guild_permissions(deafen_members=True)
@@ -383,7 +375,7 @@ class Moderation(commands.Cog):
         mute = discord.Embed(title=f"Temporarily Chat Muted {user.name}!\nGuild: {ctx.guild.name}", description=f"**Reason:** {reason}\n**By:** {str(ctx.author)}\n**Duration:** {display_time(duration)}", color=0xB53737)
         await ctx.send(embed=mute)
         await user.send(embed=mute)
-        x = modcol.insert_one(txtmutelisting)
+        self.modcol.insert_one(txtmutelisting)
 
     @commands.command(aliases=['permtxtmute', 'hardtxtmute', 'hardtextmute', 'permtextmute'])
     @commands.has_permissions(manage_roles=True)
@@ -427,7 +419,7 @@ class Moderation(commands.Cog):
         mute = discord.Embed(title=f"PERMANENTLY Chat Muted {user.name}!\nGuild: {ctx.guild.name}", description=f"**Reason:** {reason}\n**By:** {str(ctx.author)}", color=0xB53737)
         await ctx.send(embed=mute)
         await user.send(embed=mute)
-        x = modcol.insert_one(txtmutelisting)
+        self.modcol.insert_one(txtmutelisting)
 
     @commands.command(aliase=['untxtmute'])
     @commands.has_permissions(manage_roles=True)
@@ -458,14 +450,14 @@ class Moderation(commands.Cog):
                     'status': 'finished',
                     'punisher':ctx.author.name}
 
-        x = modcol.insert_one(warnlist)
+        self.modcol.insert_one(warnlist)
 
     @commands.command()
     @commands.cooldown(rate=1, per=5.0, type=commands.BucketType.user)
     async def usrhistory(self, ctx, user: discord.User, items=5):
         """Gets a user's history. (Does not sync with non-Queros moderation)"""
 
-        history = modcol.find({"$and": [{"userid": user.id}, 
+        history = self.modcol.find({"$and": [{"userid": user.id}, 
                           {"guildid": ctx.message.guild.id}]})
         embed = discord.Embed(title="History of " + str(user.name) + " in: " + str(ctx.author.guild.name), color=0xe1ff00)
         
@@ -491,7 +483,7 @@ class Moderation(commands.Cog):
     @commands.cooldown(rate=1, per=5.0, type=commands.BucketType.user)
     async def delitem(self, ctx, user: discord.User, delid: str):
         """Deletes an item from user history (Needs Manage Guild permissions)"""
-        delete = modcol.delete_one({'_id': ObjectId(delid)})
+        delete = self.modcol.delete_one({'_id': ObjectId(delid)})
         await ctx.send(f"Deleted item `{delid}` from {user.mention}'s history.")
 
     @commands.command()
@@ -499,10 +491,10 @@ class Moderation(commands.Cog):
     @commands.cooldown(rate=1, per=5.0, type=commands.BucketType.user)
     async def clearhistory(self, ctx, user: discord.User):
         """Clears user's history (Needs Manage Guild permissions)"""
-        history = modcol.find({"$and": [{"userid": user.id}, 
+        history = self.modcol.find({"$and": [{"userid": user.id}, 
                           {"guildid": ctx.message.guild.id}]})
         for i in history:
-            delete = modcol.delete_one({'_id': i['_id']})
+            delete = self.modcol.delete_one({'_id': i['_id']})
         await ctx.send(f"Cleared {user.mention}'s infraction history.")
 
 def setup(bot):

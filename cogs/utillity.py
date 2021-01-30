@@ -18,15 +18,7 @@ import asyncio
 import yfinance as yf
 import matplotlib.pyplot as plt 
 from yahoo_fin import stock_info as si
-import pymongo
-from dotenv import load_dotenv
 import psutil
-
-load_dotenv()
-
-myclient = pymongo.MongoClient("mongodb+srv://queroscode:" + os.getenv('MONGO_PASS') + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority")
-mydb = myclient["data"]
-configcol = mydb["configs"]
 
 bot_launch_time = datetime.datetime.now() #bot launch time for uptime command
 
@@ -37,6 +29,7 @@ class Utillity(commands.Cog):
 	def __init__(self, bot):
 		#Initalizes bot.
 		self.bot = bot
+		self.configcol = self.bot.mongodatabase["configs"]
 
 	@commands.command()
 	@commands.cooldown(rate=1, per=2.0, type=commands.BucketType.user)
@@ -44,23 +37,18 @@ class Utillity(commands.Cog):
 		"""Grabs stock info for a ticker of your choice. 
 		Choose from 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, and max"""
 		try:
-			cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+			cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 			cmdsList = ['0']
 
 			for i in cmds:
 				cmdOff = i['commands']
 				cmdsList.extend(cmdOff)
 
-			channelList = ['0']
-			channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-			for i in channels:
-				channeloff = i['channels']
-				channelList.extend(channeloff)
 			if 'stonks' in cmdsList:
 				return
 
 			channelList = ['0']
-			channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+			channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 	
 			for i in channels:
 				channeloff = i['channels']
@@ -117,7 +105,7 @@ class Utillity(commands.Cog):
 	async def uptime(self, ctx): #Uptime provides how long the bot is running.  Periodic restarts are reccomended.
 		"""Bot uptime."""
 		try:
-			cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+			cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 			cmdsList = ['0']
 			for i in cmds:
 				cmdOff = i['commands']
@@ -125,7 +113,7 @@ class Utillity(commands.Cog):
 			if 'uptime' in cmdsList:
 				return
 			channelList = ['0']
-			channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+			channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
 			for i in channels:
 				channeloff = i['channels']
@@ -151,7 +139,7 @@ class Utillity(commands.Cog):
 	async def raninteger(self, ctx, num1:int, num2:int):  #Generates a random number within 2 integers.
 		"""Gives a random integer within two predefined integers.
 		Example: u.raninteger 2 9""" 
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
@@ -159,7 +147,7 @@ class Utillity(commands.Cog):
 		if 'raninteger' in cmdsList:
 			return
 		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
 		for i in channels:
 			channeloff = i['channels']
@@ -186,7 +174,7 @@ class Utillity(commands.Cog):
 		Example: u.search How to make pizza"""
 		#embed stuff
 		try:
-			cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+			cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 			cmdsList = ['0']
 			for i in cmds:
 				cmdOff = i['commands']
@@ -194,7 +182,7 @@ class Utillity(commands.Cog):
 			if 'gsearch' in cmdsList:
 				return
 			channelList = ['0']
-			channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+			channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
 			for i in channels:
 				channeloff = i['channels']
@@ -229,7 +217,7 @@ class Utillity(commands.Cog):
 		u.translate "je suis faim" spanish (toLang is specified and translates to Spanish)
 		u.translate "no habla espanol" spanish french (fromLang and toLang are specified and it does the translation)
 		"""		
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
@@ -238,7 +226,7 @@ class Utillity(commands.Cog):
 			return
 
 		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
 		for i in channels:
 			channeloff = i['channels']
@@ -302,7 +290,7 @@ class Utillity(commands.Cog):
 	@commands.cooldown(rate=1, per=1.0, type=commands.BucketType.user)
 	async def calc(self, ctx, equation): #simple calculator
 		"""Calculates math problems. Only use symbols and numbers for now."""
-		cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
@@ -315,7 +303,7 @@ class Utillity(commands.Cog):
 			return
 
 		channelList = ['0']
-		channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
 		for i in channels:
 			channeloff = i['channels']
