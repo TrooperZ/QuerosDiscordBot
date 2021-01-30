@@ -452,14 +452,14 @@ class Music(commands.Cog):
         queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
         
         if player.is_playing:
-            if ctx.author.guild_permissions.manage_channels:
+            if "dj" in [y.name.lower() for y in ctx.author.roles] or ctx.author.guild_permissions.manage_channels:
                 queue.clear()
                 await player.destroy()
                 queue.clear()
                 await ctx.send(":door: Leaving the voice channel...")
                 return
 
-            await ctx.send(":x: The bot is in use right now. Please use u.forceleave or wait until it is finished.")
+            await ctx.send(":x: The bot is in use right now. Please have a DJ or someone with permissions kick the bot.")
             return
         queue.clear()
         await player.destroy()
