@@ -3,7 +3,7 @@
 Add the bot [here](https://discord.com/oauth2/authorize?client_id=760856635425554492&permissions=2146954871&scope=bot)
 
 ## What is Queros?
-Queros (pronounced like kew-eros) is a Discord bot written in Python designed with moderation features, utillity, music, and other fun commands! 
+Queros (pronounced like kue-ros) is a Discord bot written in Python designed with moderation features, utillity, music, and other fun commands! 
 
 
 ### Moderation:
@@ -23,9 +23,9 @@ Queros can do many things, translate text, calculate simple equations, google st
 This bot has a lot of fun commands. You can manipulate images and run funny commands to do hilarious stuff. Check the help menu for all of them.
 
 
-### Music: Queros has a simple music feature, allowing you to play, pause, shuffle, loop, etc. The bot uses music from youtube to play. Currently, the bot will only get the 1st item of a playlist, but will be fixed later.
+### Music: 
 
-Note: For loop, shuffle, and the override commands, you need Manage Server perms. 
+Queros has a simple music feature, allowing you to play, pause, shuffle, loop, etc. The bot uses music from youtube to play, and it supports playlists. 
 
 ### How to get premium?
 Message me on Discord or go on the support server and request your server to have premium status. You must pay me 5 dollars worth of crypto on either XMR (Monero) or ETH (Ethereum) and supply me with the server ID (Right click server icon, copy id) and payment proof. I will enable premium on your server within 1-5 days.
