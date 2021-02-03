@@ -301,6 +301,7 @@ class Music(commands.Cog):
                         queue.clear()
                         await player.destroy()
                         queue.clear()
+                        await ctx.disconnect()
             except:
                 pass
             if player.is_playing == False:
@@ -308,6 +309,7 @@ class Music(commands.Cog):
                     queue.clear()
                     await player.destroy()
                     queue.clear()
+                    await ctx.disconnect()
                 except:
                     pass
             elif player.is_connected == False:
@@ -315,6 +317,7 @@ class Music(commands.Cog):
                     queue.clear()
                     await player.destroy()
                     queue.clear()
+                    await ctx.disconnect()
                 except:
                     pass
             
@@ -438,9 +441,15 @@ class Music(commands.Cog):
                 queue.clear()
                 await ctx.send(":door: Leaving the voice channel...")
                 return
-
             await ctx.send(":x: The bot is in use right now. Please have a DJ or someone with permissions kick the bot.")
             return
+        else:
+                queue.clear()
+                await player.destroy()
+                queue.clear()
+                await ctx.send(":door: Leaving the voice channel...")
+                return
+
     @commands.command(aliases=['eq', 'equalizer'], name="equalizer (<:silverstar11:794770265657442347> Qu+ Server)")
     async def equalizer(self, ctx, type:str):
         """Sets the equalizer for the player.

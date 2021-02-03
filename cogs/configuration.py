@@ -45,21 +45,6 @@ class Configuration(commands.Cog):
 
 	#	if mode.lower == 'clear':
 	#		await ctx.send("This is currently in development.")
-
-	@commands.command()
-	@commands.has_permissions(manage_guild=True)
-	async def togglepog(self, ctx, yN: str):
-		"""Toggles the pog gifs if pog is in a message"""
-		if yN not in ('on', 'off'):
-			await ctx.send("Please choose a valid level, on or off.")
-			return
-		server = ctx.message.guild.id
-		try:
-			configcol.update_one({"$and": [{"guild": server}, {"cfg_type": 'pogToggle'}]}, {"$set":{'cfg_type':'pogToggle', 'guild':server, 'yN':yN}}, upsert=True)
-		except Exception as e:
-			print(e)
-		await ctx.send("Toggled auto gif reply to 'pog': **" + yN + "**")
-	
 	@commands.command()
 	@commands.has_permissions(manage_guild=True)
 	async def togglecommand(self, ctx, cmd: str, yN: str):

@@ -66,6 +66,12 @@ async def getguilds(ctx):
         await ctx.send(i.name)
 
 @bot.command(hidden=True)
+async def say(ctx, msg):
+    if not await bot.is_owner(ctx.author):
+        return
+    await ctx.send(msg)
+
+@bot.command(hidden=True)
 async def reload_cog(ctx, cog: str):
     if not await bot.is_owner(ctx.author):
         return
