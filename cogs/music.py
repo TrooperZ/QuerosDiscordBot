@@ -380,7 +380,7 @@ class Music(commands.Cog):
             await ctx.send(f':signal_strength: Connecting to **{ctx.author.voice.channel}**...')
             await player.connect(ctx.author.voice.channel.id)
 
-    @commands.command(aliases=['nowplaying'])
+    @commands.command(aliases=['nowplaying', 'np'])
     async def now(self, ctx):
         """Displays the current song that is playing"""
         player = self.bot.wavelink.get_player(ctx.guild.id)
@@ -634,7 +634,7 @@ class Music(commands.Cog):
 
         await ctx.send(f":track_next: Skipping and playing requested song...")
 
-        await self.bot.get_cog('songdata').songdata_addtop(query, ctx.guild.id, ctx.author, "play")
+        await self.bot.get_cog('songdata').songdata_addtop(query, ctx.guild.id, ctx.author, "top")
         queue.skip(1)
         await player.stop()
 
