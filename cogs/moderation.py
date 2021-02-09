@@ -470,7 +470,7 @@ class Moderation(commands.Cog):
                 embed.add_field(name="**" + str(x['infraction']) + "** `" + str(x['_id']) + "`" , value="Reason: **" + str(x['reason']) + "**\nTime: **" + str(x['time']) + "**\nPunisher: **" + str(punisherUser) + "**\nDuration: **" + str(x['duration']) + "**", inline=False)
             
             except:
-                embed.add_field(name="**" + str(x['infraction']) + "** `" + str(x['_id']) + "`" , value="Reason: **" + str(x['reason']) + "**\nTime: **" + str(x['time']) + "**\nPunisher: **" + str(punisherUser), inline=False)
+                embed.add_field(name="**" + str(x['infraction']) + "** `" + str(x['_id']) + "`" , value="Reason: **" + str(x['reason']) + "**\nTime: **" + str(x['time']) + "**\nPunisher: **" + str(punisherUser) + "**", inline=False)
             
             if itemsCount >= items:
                 break
