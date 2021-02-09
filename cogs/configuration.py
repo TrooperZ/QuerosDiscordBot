@@ -19,32 +19,6 @@ balcol = mydb['balances']
 class Configuration(commands.Cog):
 	"""Configure bot server settings"""
 
-	#@commands.command()
-	#@commands.has_permissions(manage_guild=True)
-	#async def cursefilter(self, ctx, mode: str, level: str=None):
-	#	"""Profanity filter. Toggle on or off"""
-	#	if mode.lower() not in ('toggle', 'whitelist', 'blacklist', 'clear'):
-	#		await ctx.send("Choose a valid mode: toggle, whitelist, blacklist, or clear")
-	#		return
-	#	if mode.lower() == 'toggle':
-	#		if level.lower() not in ('off', 'on'):
-	#			await ctx.send("Please choose a valid level, on or off.")
-	#			return
-	#		server = ctx.message.guild.id
-	#		try:
-	#			configcol.update_one({"$and": [{"guild": server}, {"cfg_type": 'profanity'}]}, {"$set":{'cfg_type':'profanity', 'guild':server, 'level':level.lower()}}, upsert=True)
-	#		except Exception as e:
-	#			print(e)
-	#		await ctx.send("Profanity filter level set to: **" + level.lower() + "**")
-
-	#	if mode.lower == 'whitelist':
-	#		await ctx.send("This is currently in development.")
-
-	#	if mode.lower == 'blacklist':
-	#		await ctx.send("This is currently in development.")
-
-	#	if mode.lower == 'clear':
-	#		await ctx.send("This is currently in development.")
 	@commands.command()
 	@commands.has_permissions(manage_guild=True)
 	async def togglecommand(self, ctx, cmd: str, yN: str):

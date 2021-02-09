@@ -10,6 +10,8 @@ from pretty_help import PrettyHelp
 import pymongo
 from dotenv import load_dotenv
 import wavelink
+from asyncdagpi import Client as dagpiClient
+from discord.ext import tasks
 
 load_dotenv()
 mongoclient = pymongo.MongoClient("mongodb+srv://queroscode:" + os.getenv('MONGO_PASS') + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority")
@@ -38,6 +40,7 @@ bot = commands.Bot(command_prefix='u.', intents=intents, help_command=PrettyHelp
 bot.help_command = PrettyHelp(color=0x6bd5ff, active=60, verify_checks=False)
 bot.wavelink = wavelink.Client(bot=bot)
 bot.mongodatabase = mongoclient["data"]
+bot.dagpi = dagpiClient(os.getenv('DAGPI_TOKEN'))
 
 
 configcol = bot.mongodatabase["configs"]
@@ -78,13 +81,17 @@ async def reload_cog(ctx, cog: str):
     bot.reload_extension(cog)
 
 if __name__ == '__main__':
-    for extension in ['cogs.utillity', 'cogs.fun', 'cogs.configuration', 'cogs.moderation', 'cogs.economy', 'cogs.botinfo', 'cogs.music']:
+    for extension in ['cogs.utillity', 'cogs.fun', 'cogs.configuration', 'cogs.moderation', 'cogs.economy', 'cogs.botinfo', 'cogs.image', 'cogs.music']:
         bot.load_extension(extension)
 
 @bot.event 
 async def on_ready():
     print("Bot is online.")
-    #await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="u.help and other Queros commands in " + str(len(bot.guilds)) + " servers"))
+
+@tasks.loop(seconds=60)
+async def statusLoop():
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="u.help in" + str(len(bot.guilds)) + " servers"))
+
 
 @bot.event
 async def on_command_error(ctx, error):
@@ -94,10 +101,13 @@ async def on_command_error(ctx, error):
             return
         fixedRetry = int(error.retry_after)
         await ctx.send('This command is on a `' + display_time(fixedRetry) + '` cooldown, try again later.')
+        return
     if isinstance(error, commands.MissingPermissions):
         await ctx.send("You are missing the permissions to run this command.")
+        return
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.send("You are missing arguments in your command, check u.help [command] for the arguments.")
+        return
     raise error
 
 bot.run(os.getenv('DISCORD_TOKEN'), bot=True, reconnect=True)

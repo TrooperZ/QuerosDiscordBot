@@ -7,17 +7,17 @@ import os
 import random
 import json
 import requests
-import praw
+import asyncpraw
 from bs4 import BeautifulSoup
 import urllib.request
 import discord
 from discord.ext import commands
 import PIL.Image
 import deeppyer
-from wand.image import Image 
 import re
+import asyncdagpi
  
-reddit = praw.Reddit(client_id=os.getenv('REDDIT_CLIENT_ID'), 
+reddit = asyncpraw.Reddit(client_id=os.getenv('REDDIT_CLIENT_ID'), 
 					 client_secret=os.getenv('REDDIT_API_KEY'),
 					 password=os.getenv('REDDIT_PASSWORD'), 
 					 user_agent='QuerosDiscordBot accessAPI:v0.0.1 (by /u/Troopr_Z)',
@@ -28,52 +28,18 @@ class Fun(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 		self.configcol = self.bot.mongodatabase["configs"]
-
-	@commands.command()
-	@commands.cooldown(rate=1, per=3.0, type=commands.BucketType.user)
-	async def meme(self, ctx): 
-		"""Sends a meme fresh from reddit"""
-		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-		cmdsList = ['0']
-		for i in cmds:
-			cmdOff = i['commands']
-			cmdsList.extend(cmdOff)
-		if 'meme' in cmdsList:
-			return
-
-		channelList = ['0']
-		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-		for i in channels:
-			channeloff = i['channels']
-			channelList.extend(channeloff)
-
-		if ctx.message.channel.id in channelList:
-			return
-
-		coinflip = random.randint(1, 2) #randomizes between 2 subs
-		#grabs the meme
-		if coinflip == 1:
-			response = requests.get("https://www.reddit.com/r/dankmemes.json", headers={"User-Agent": "linux:queros:v1.0.0"})
-
-		if coinflip == 2:
-			response = requests.get("https://www.reddit.com/r/memes.json", headers={"User-Agent": "linux:queros:v1.0.0"})
-		#loads the meme
-		page = response.json()
-		meme = random.choice(page["data"]["children"])["data"]["url"]
-
-		await ctx.send(meme)
+		self.bot.dagpi = bot.dagpi
 
 	@commands.command()
 	@commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
-	async def deepfry(self, ctx, user=None): 
-		"""Deepfries an image, must put command with uploaded image"""
+	async def pickupline(self, ctx):
+		"""Generates a pickup line, may be NSFW"""
 		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
 			cmdsList.extend(cmdOff)
-		if 'deepfry' in cmdsList:
+		if 'pickupline' in cmdsList:
 			return
 
 		channelList = ['0']
@@ -84,42 +50,19 @@ class Fun(commands.Cog):
 			channelList.extend(channeloff)
 		if ctx.message.channel.id in channelList:
 			return
-
-		if user == None:
-			for attachment in ctx.message.attachments:
-				await attachment.save("targetImgdp.png")
-				providedimage = PIL.Image.open("targetImgdp.png")
-				image = await deeppyer.deepfry(providedimage, flares=False)
-				image.save("fryer.png")
-				pic = discord.File('fryer.png')
-				await ctx.send(file=pic)
-				return
-		else:
-			userID = re.sub('[^0-9]','', user)
-			try:
-				user = await ctx.guild.fetch_member(userID)
-			except:
-				await ctx.send("No user found.")
-				return
-
-			img = user.avatar_url_as()
-			await img.save("targetuserImgdp.png")
-			providedimage = PIL.Image.open("targetuserImgdp.png")
-			image = await deeppyer.deepfry(providedimage, flares=False)
-			image.save("fryer.png")
-			pic = discord.File('fryer.png')
-			await ctx.send(file=pic)
+		line = await self.bot.dagpi.pickup_line()
+		await ctx.send(line.line)
 
 	@commands.command()
 	@commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
-	async def waveify(self, ctx, height = 32, width = 4): 
-		"""Adds wave effect to an image, must put command with uploaded image"""
+	async def joke(self, ctx):
+		"""Generates a joke, may be NSFW"""
 		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
 		for i in cmds:
 			cmdOff = i['commands']
 			cmdsList.extend(cmdOff)
-		if 'deepfryuser' in cmdsList:
+		if 'joke' in cmdsList:
 			return
 
 		channelList = ['0']
@@ -128,19 +71,78 @@ class Fun(commands.Cog):
 		for i in channels:
 			channeloff = i['channels']
 			channelList.extend(channeloff)
-
 		if ctx.message.channel.id in channelList:
 			return
-		for attachment in ctx.message.attachments:
-			await attachment.save("wavetargetimg.png")
-			with Image(filename ="wavetargetimg.png") as img:
-						img.wave(amplitude = img.height / height, wave_length = img.width / width) 
-						img.save(filename ="wavedimg.png") 
-			pic = discord.File('wavedimg.png')
-			await ctx.send(file=pic)
+		await ctx.send(await self.bot.dagpi.joke())
+
+	@commands.command()
+	@commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
+	async def roast(self, ctx):
+		"""Generates a roast, may be NSFW"""
+		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmdsList = ['0']
+		for i in cmds:
+			cmdOff = i['commands']
+			cmdsList.extend(cmdOff)
+		if 'roast' in cmdsList:
+			return
+
+		channelList = ['0']
+		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+
+		for i in channels:
+			channeloff = i['channels']
+			channelList.extend(channeloff)
+		if ctx.message.channel.id in channelList:
+			return
+		await ctx.send(await self.bot.dagpi.roast())
+
+	@commands.command()
+	@commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
+	async def yomama(self, ctx):
+		"""Generates a roast, may be NSFW"""
+		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+		cmdsList = ['0']
+		for i in cmds:
+			cmdOff = i['commands']
+			cmdsList.extend(cmdOff)
+		if 'yomama' in cmdsList:
+			return
+
+		channelList = ['0']
+		channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+
+		for i in channels:
+			channeloff = i['channels']
+			channelList.extend(channeloff)
+		if ctx.message.channel.id in channelList:
+			return
+		await ctx.send(await self.bot.dagpi.yomama())
+
+	#@commands.command()
+	#@commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
+	#async def waifu(self, ctx):
+	#	"""Waifu"""
+	#	cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+	#	cmdsList = ['0']
+	#	for i in cmds:
+	#		cmdOff = i['commands']
+	#		cmdsList.extend(cmdOff)
+	#	if 'waifu' in cmdsList:
+	#		return
+
+	#	channelList = ['0']
+	#	channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+
+	#	for i in channels:
+	#		channeloff = i['channels']
+	#		channelList.extend(channeloff)
+	#	if ctx.message.channel.id in channelList:
+	#		return
+	#	await ctx.send(await self.bot.dagpi.waifu())
 
 	@commands.command(aliases=['murder'])
-	@commands.cooldown(rate=1, per=1.0, type=commands.BucketType.user)
+	@commands.cooldown(rate=1, per=5.0, type=commands.BucketType.user)
 	async def kill(self, ctx, user: discord.Member):
 		"""Eliminates a user of your choice."""
 		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
@@ -159,19 +161,19 @@ class Fun(commands.Cog):
 
 		if ctx.message.channel.id in channelList:
 			return
-		kill_choices = [f"{user.mention} just got 360 noscoped by {ctx.message.author.mention}, let's gooooooo!",
-			f"{user.mention} drank expired milk and died.",
-			f"{user.mention} tripped and fell in the industrial blender.",
-			f"{user.mention} got poisoned by {ctx.message.author.mention}",
-			f"{user.mention} has been eliminated. Well done Agent 47, proceed to the extraction point.",
-			f"*chk chik* **BOOM!** {user.mention}'s guts just got splattered on the wall by {ctx.message.author.mention}"
-			f"{user.mention} was skooter ankled."
+		kill_choices = [f"{user.name} just got 360 noscoped by {ctx.message.author.name}, let's gooooooo!",
+			f"{user.name} drank expired milk and died.",
+			f"{user.name} tripped and fell in the industrial blender.",
+			f"{user.name} got poisoned by {ctx.message.author.name}",
+			f"{user.name} has been eliminated. Well done Agent 47, proceed to the extraction point.",
+			f"*chk chik* **BOOM!** {user.name}'s guts just got splattered on the wall by {ctx.message.author.name}",
+			f"{user.name} was skooter ankled."
 			]
 
 		await ctx.send(random.choice(kill_choices))
 
 	@commands.command()
-	@commands.cooldown(rate=1, per=3.0, type=commands.BucketType.user)
+	@commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
 	async def redditgrab(self, ctx, subreddit: str, spoiler='no'):
 		"""Grabs a post from reddit subreddit, add spoiler to make the image a spoiler"""
 		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
@@ -192,51 +194,42 @@ class Fun(commands.Cog):
 			return
 		await ctx.channel.trigger_typing()
 		try:
-				subredditGrabbed = reddit.subreddit(subreddit)
+				subredditGrabbed = await reddit.subreddit(subreddit)
 		except Exception as e:
 				await ctx.send("Hmm, there was an issue getting that subreddit. Make sure to type the subreddit without the r/.")
 				print(e)
-
+		Listposts = []
 		randomPost = random.randint(1, 120)
-		Listposts = [post for post in subredditGrabbed.hot(limit=120)]
+		async for post in subredditGrabbed.hot(limit=60):
+			Listposts.append(post)
 		post = Listposts[randomPost]
 
 		if post.over_18:
 				if ctx.channel.is_nsfw():		
-						if spoiler == 'spoiler':
-								urllib.request.urlretrieve(post.url, "SPOILER_image_nsfw.jpg")
-
-								with open('SPOILER_image_nsfw.jpg', 'rb') as f:
-										picture = discord.File(f)
-										await ctx.send(file=picture)
-
-						if spoiler == 'no':
-								embed = discord.Embed(title=post.title, description="Posted by: " + str(post.author), url="https://www.reddit.com" + post.permalink, color=0xff4000)
-								embed.set_author(name="Post from r/" + subreddit)
+							embed = discord.Embed(title=post.title, description="Posted by: " + str(post.author), url="https://www.reddit.com" + post.permalink, color=0xff4000)
+							embed.set_author(name="Post from r/" + subreddit)
+							if post.is_self:
+								embed.add_field(name="** **", value=str(post.selftext))
+							else:
 								embed.set_image(url=post.url)
-								embed.set_footer(text="Upvotes: " + str(post.score))
-								await ctx.send(embed=embed)
+							embed.set_footer(text="Upvotes: " + str(post.score))
+							await ctx.send(embed=embed)
 
 				else:
-						await ctx.send("This channel is not NSFW, go somewhere else!")
+						await ctx.send("Content is NSFW, this channel is not NSFW, content will not be loaded.")
 
 		if post.over_18 == False:
-				if spoiler == 'spoiler':
-								urllib.request.urlretrieve(post.url, "SPOILER_image_sfw.jpg")
-
-								with open('SPOILER_image_sfw.jpg', 'rb') as f:
-									picture = discord.File(f)
-									await ctx.send(file=picture)
-
-				if spoiler == 'no':
-						embed = discord.Embed(title=post.title, description="Posted by: " + str(post.author), url="https://www.reddit.com" + post.permalink, color=0xff4000)
-						embed.set_author(name="Post from r/" + subreddit)
+					embed = discord.Embed(title=post.title, description="Posted by: " + str(post.author), url="https://www.reddit.com" + post.permalink, color=0xff4000)
+					embed.set_author(name="Post from r/" + subreddit)
+					if post.is_self:
+						embed.add_field(name="** **", value=str(post.selftext))
+					else:
 						embed.set_image(url=post.url)
-						embed.set_footer(text="Upvotes: " + str(post.score))
-						await ctx.send(embed=embed)
+					embed.set_footer(text="Upvotes: " + str(post.score))
+					await ctx.send(embed=embed)
 
 	@commands.command(aliases=['8ball'])
-	@commands.cooldown(rate=1, per=1.0, type=commands.BucketType.user)
+	@commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
 	async def eightB(self, ctx: commands.Context, *, query: str):
 		"""Eight Ball shall tell your future"""
 		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
