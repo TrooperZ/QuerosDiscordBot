@@ -289,7 +289,7 @@ class Utillity(commands.Cog):
 	@commands.command(aliases=['calculate', 'calculator'])
 	@commands.cooldown(rate=1, per=1.0, type=commands.BucketType.user)
 	@commands.is_owner()
-	async def calc(self, ctx, equation, *): #simple calculator
+	async def calc(self, ctx, *, equation): #simple calculator
 		"""Calculates math problems. Only use symbols and numbers for now."""
 		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
