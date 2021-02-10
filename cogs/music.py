@@ -298,6 +298,7 @@ class Music(commands.Cog):
             channel = self.bot.get_channel(player.channel_id)
             try:
                 if len(channel.members) == 1:
+                        await ctx.send("Queros left the VC as it was alone for 90 seconds.")
                         queue.clear()
                         await player.destroy()
                         queue.clear()
