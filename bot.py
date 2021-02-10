@@ -79,6 +79,7 @@ async def reload_cog(ctx, cog: str):
     if not await bot.is_owner(ctx.author):
         return
     bot.reload_extension(cog)
+    await ctx.send("done")
 
 if __name__ == '__main__':
     for extension in ['cogs.utillity', 'cogs.fun', 'cogs.configuration', 'cogs.moderation', 'cogs.economy', 'cogs.botinfo', 'cogs.image', 'cogs.music']:
