@@ -288,7 +288,8 @@ class Utillity(commands.Cog):
 
 	@commands.command(aliases=['calculate', 'calculator'])
 	@commands.cooldown(rate=1, per=1.0, type=commands.BucketType.user)
-	async def calc(self, ctx, equation): #simple calculator
+	@commands.is_owner()
+	async def calc(self, ctx, equation, *): #simple calculator
 		"""Calculates math problems. Only use symbols and numbers for now."""
 		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
@@ -321,9 +322,9 @@ class Utillity(commands.Cog):
 				safe_dict = dict([ (k, locals().get(k, None)) for k in safe_list ])
 				safe_dict['abs'] = abs
 
-				ans = eval(equation, {"__builtins__":None}, safe_dict)
+				ans = eval(equation,{"__builtins__":None},safe_dict)
 
-				await ctx.send(ans)
+				await ctx.send(f"`{ans}`")
 
 			#error stuff
 			except ZeroDivisionError:
