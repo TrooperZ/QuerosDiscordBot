@@ -290,7 +290,7 @@ class Music(commands.Cog):
                 raise premiumServer_error()
 
 
-    @tasks.loop(seconds=90) #if bot is inactive for 1.5 minutes, it leaves
+    @tasks.loop(seconds=120) #if bot is inactive for 2 minutes, it leaves
     async def timeOutMusic(self):
         for i in self.bot.guilds:
             player = self.bot.wavelink.get_player(i.id)
