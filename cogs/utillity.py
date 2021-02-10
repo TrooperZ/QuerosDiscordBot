@@ -317,9 +317,9 @@ class Utillity(commands.Cog):
 		try:  
 
 			try:
-				no_no_words = ['import', '__', 'os', 'sys', 'await', 'bot', 'self', 'raise', 'ctx', 'eval', 'def', 'lambda', '0x', 'dir', 'rm', 'rf']
-				if any(x in no_no_words for x in matches):
-					await ctx.send(":|")
+				no_no_words = ['import', '__', 'os', 'sys', 'await', 'bot', 'self', 'raise', 'ctx', 'eval', 'def', 'lambda', '0x', 'dir', 'rm', 'rf', 'cd']
+				if any(x in no_no_words for x in equation):
+					await ctx.send(":neutral_face: Can't calculate that.")
 					return
 
 				await ctx.send(simple_eval(equation, functions={'acos': acos, 'asin': asin,
@@ -339,7 +339,7 @@ class Utillity(commands.Cog):
 				await ctx.send("Formulate your math problem correctly you illiterate moron.")
 
 		except Exception as e:
-			await ctx.send(":|")
+			await ctx.send(":neutral_face: Can't calculate that.")
 			print(e)
 
 def setup(bot):
