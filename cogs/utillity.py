@@ -327,14 +327,13 @@ class Utillity(commands.Cog):
 
 			#error stuff
 			except ZeroDivisionError:
-				await ctx.send("**SHUT IT DOWN!** Whew, you almost caused a black hole! Don't divide by zero")
+				await ctx.send("You can't calculate by zero, duh.")
 
 			except SyntaxError or NameError:
 				await ctx.send("Formulate your math problem correctly you illiterate moron.")
 
 		except Exception as e:
-			await ctx.send("Hmm, thats odd. The command errored out. Please try again, or with different arguments and report it on the support server.")
-			await ctx.send("Error: " + str(e))
+			await ctx.send(":|")
 
 def setup(bot):
 	bot.add_cog(Utillity(bot))
