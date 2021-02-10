@@ -303,6 +303,7 @@ class Music(commands.Cog):
                         queue.clear()
             except:
                 pass
+            asyncio.sleep(5)
             
     @timeOutMusic.before_loop #basic loop handeling
     async def before_timeOutMusic(self):
