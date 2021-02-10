@@ -465,12 +465,11 @@ class Moderation(commands.Cog):
 
         for x in history:
             itemsCount += 1
-            punisherUser = self.bot.get_user(x['punisher'])
             try:
-                embed.add_field(name="**" + str(x['infraction']) + "** `" + str(x['_id']) + "`" , value="Reason: **" + str(x['reason']) + "**\nTime: **" + str(x['time']) + "**\nPunisher: **" + str(punisherUser) + "**\nDuration: **" + str(x['duration']) + "**", inline=False)
+                embed.add_field(name="**" + str(x['infraction']) + "** `" + str(x['_id']) + "`" , value="Reason: **" + str(x['reason']) + "**\nTime: **" + str(x['time']) + "**\nPunisher: **" + str(x['punisher']) + "**\nDuration: **" + str(x['duration']) + "**", inline=False)
             
             except:
-                embed.add_field(name="**" + str(x['infraction']) + "** `" + str(x['_id']) + "`" , value="Reason: **" + str(x['reason']) + "**\nTime: **" + str(x['time']) + "**\nPunisher: **" + str(punisherUser) + "**", inline=False)
+                embed.add_field(name="**" + str(x['infraction']) + "** `" + str(x['_id']) + "`" , value="Reason: **" + str(x['reason']) + "**\nTime: **" + str(x['time']) + "**\nPunisher: **" + str(x['punisher']) + "**", inline=False)
             
             if itemsCount >= items:
                 break
