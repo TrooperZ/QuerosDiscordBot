@@ -315,7 +315,13 @@ class Utillity(commands.Cog):
 
 			try:
 				equation = equation.replace("^", "**")
-				ans = eval(equation)
+				safe_list = ['math','acos', 'asin', 'atan', 'atan2', 'ceil', 'cos', 'cosh', 
+				 'degrees', 'e', 'exp', 'fabs', 'floor', 'fmod', 'frexp', 'hypot', 'ldexp', 'log', 
+				'log10', 'modf', 'pi', 'pow', 'radians', 'sin', 'sinh', 'sqrt', 'tan', 'tanh']
+				safe_dict = dict([ (k, locals().get(k, None)) for k in safe_list ])
+				safe_dict['abs'] = abs
+
+				ans = eval(equation, {"__builtins__":None}, safe_dict)
 
 				await ctx.send(ans)
 
