@@ -19,6 +19,9 @@ import yfinance as yf
 import matplotlib.pyplot as plt 
 from yahoo_fin import stock_info as si
 import psutil
+from math import *
+from simpleeval import simple_eval
+import random
 
 bot_launch_time = datetime.datetime.now() #bot launch time for uptime command
 
@@ -288,7 +291,6 @@ class Utillity(commands.Cog):
 
 	@commands.command(aliases=['calculate', 'calculator'])
 	@commands.cooldown(rate=1, per=1.0, type=commands.BucketType.user)
-	@commands.is_owner()
 	async def calc(self, ctx, *, equation): #simple calculator
 		"""Calculates math problems. Only use symbols and numbers for now."""
 		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
@@ -315,16 +317,19 @@ class Utillity(commands.Cog):
 		try:  
 
 			try:
-				equation = equation.replace("^", "**")
-				safe_list = ['math','acos', 'asin', 'atan', 'atan2', 'ceil', 'cos', 'cosh', 
-				 'degrees', 'e', 'exp', 'fabs', 'floor', 'fmod', 'frexp', 'hypot', 'ldexp', 'log', 
-				'log10', 'modf', 'pi', 'pow', 'radians', 'sin', 'sinh', 'sqrt', 'tan', 'tanh']
-				safe_dict = dict([ (k, locals().get(k, None)) for k in safe_list ])
-				safe_dict['abs'] = abs
+				no_no_words = ['import', '__', 'os', 'sys', 'await', 'bot', 'self', 'raise', 'ctx', 'eval', 'def', 'lambda', '0x', 'dir', 'rm', 'rf']
+				if any(x in no_no_words for x in matches):
+					await ctx.send(":|")
+					return
 
-				ans = eval(equation,{"__builtins__":None},safe_dict)
-
-				await ctx.send(f"`{ans}`")
+				await ctx.send(simple_eval(equation, functions={'acos': acos, 'asin': asin,
+													   'atan': atan, 'atan2': atan2, 'ceil': ceil,
+													   'cos': cos, 'cosh': cosh, 'degrees': degrees, 
+													   'exp': exp, 'fabs': fabs, 'floor': floor,
+													   'fmod': fmod, 'frexp': frexp, 'hypot': hypot, 'ldexp': ldexp,
+													   'log': log, 'log10':log10, 'modf': modf,	'pow': pow,
+													   'radians': radians, 'sin': sin, 'sinh': sinh, 'sqrt': sqrt,
+													   'tan': tan, 'tanh': tanh, 'rand': random.randint}))
 
 			#error stuff
 			except ZeroDivisionError:
@@ -335,6 +340,7 @@ class Utillity(commands.Cog):
 
 		except Exception as e:
 			await ctx.send(":|")
+			print(e)
 
 def setup(bot):
 	bot.add_cog(Utillity(bot))
