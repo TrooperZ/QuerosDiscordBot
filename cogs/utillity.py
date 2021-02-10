@@ -322,6 +322,8 @@ class Utillity(commands.Cog):
 					await ctx.send(":neutral_face: Can't calculate that.")
 					return
 
+				equation = equation.replace("^", "**")
+
 				await ctx.send(simple_eval(equation, functions={'acos': acos, 'asin': asin,
 													   'atan': atan, 'atan2': atan2, 'ceil': ceil,
 													   'cos': cos, 'cosh': cosh, 'degrees': degrees, 
