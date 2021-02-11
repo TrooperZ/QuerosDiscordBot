@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 import wavelink
 from asyncdagpi import Client as dagpiClient
 from discord.ext import tasks
+import asyncio
 
 load_dotenv()
 mongoclient = pymongo.MongoClient("mongodb+srv://queroscode:" + os.getenv('MONGO_PASS') + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority")
@@ -67,6 +68,7 @@ async def getguilds(ctx):
         return
     for i in bot.guilds:
         await ctx.send(i.name)
+        asyncio.sleep(1)
 
 @bot.command(hidden=True)
 async def say(ctx, msg):
@@ -78,21 +80,28 @@ async def say(ctx, msg):
 async def reload_cog(ctx, cog: str):
     if not await bot.is_owner(ctx.author):
         return
-    bot.reload_extension(cog)
+    try:
+        bot.reload_extension(cog)
+    except Exception as e:
+        await ctx.send(e)
     await ctx.send("done")
 
 if __name__ == '__main__':
     for extension in ['cogs.utillity', 'cogs.fun', 'cogs.configuration', 'cogs.moderation', 'cogs.economy', 'cogs.botinfo', 'cogs.image', 'cogs.music']:
         bot.load_extension(extension)
 
-@bot.event 
-async def on_ready():
-    print("Bot is online.")
-
 @tasks.loop(seconds=60)
 async def statusLoop():
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="u.help in" + str(len(bot.guilds)) + " servers"))
 
+@statusLoop.before_loop #basic loop handeling
+async def before_statusLoop(self):
+    await self.bot.wait_until_ready()
+
+@bot.event 
+async def on_ready():
+    print("Bot is online.")
+    await statusLoop.start()
 
 @bot.event
 async def on_command_error(ctx, error):
