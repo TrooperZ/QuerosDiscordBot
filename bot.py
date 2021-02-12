@@ -92,11 +92,11 @@ if __name__ == '__main__':
 
 @tasks.loop(seconds=60)
 async def statusLoop():
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="u.help in" + str(len(bot.guilds)) + " servers"))
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="u.help in " + str(len(bot.guilds)) + " servers"))
 
 @statusLoop.before_loop #basic loop handeling
-async def before_statusLoop(self):
-    await self.bot.wait_until_ready()
+async def before_statusLoop():
+    await bot.wait_until_ready()
 
 @bot.event 
 async def on_ready():

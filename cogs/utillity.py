@@ -8,8 +8,6 @@ import sys
 import os
 import urllib.request
 import discord
-import pygoogletranslation
-from pygoogletranslation import Translator
 from discord.ext import commands
 from googlesearch import search
 import datetime
@@ -22,6 +20,7 @@ import psutil
 from math import *
 from simpleeval import simple_eval
 import random
+import async_google_trans_new  
 
 bot_launch_time = datetime.datetime.now() #bot launch time for uptime command
 
@@ -101,41 +100,7 @@ class Utillity(commands.Cog):
 
 		except Exception as e:
 			await ctx.send("Hmm, thats odd. The command errored out. Please try again, or with different arguments and report it on the support server.")
-			await ctx.send("Error: " + str(e))
-
-	@commands.command()
-	@commands.cooldown(rate=1, per=1.0, type=commands.BucketType.user)
-	async def uptime(self, ctx): #Uptime provides how long the bot is running.  Periodic restarts are reccomended.
-		"""Bot uptime."""
-		try:
-			cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-			cmdsList = ['0']
-			for i in cmds:
-				cmdOff = i['commands']
-				cmdsList.extend(cmdOff)
-			if 'uptime' in cmdsList:
-				return
-			channelList = ['0']
-			channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-			for i in channels:
-				channeloff = i['channels']
-				channelList.extend(channeloff)
-
-			if ctx.message.channel.id in channelList:
-				return
-
-			delta_uptime = datetime.datetime.now() - bot_launch_time 
-			hours, remainder = divmod(int(delta_uptime.total_seconds()), 3600)
-			minutes, seconds = divmod(remainder, 60)
-			days, hours = divmod(hours, 24)
-
-			await ctx.send(f"{days}d, {hours}h, {minutes}m, {seconds}s")
-			return
-
-		except Exception as e:
-			await ctx.send("Hmm, thats odd. The command errored out. Please try again, or with different arguments and report it on the support server.")
-			await ctx.send("Error: " + str(e))
+			await ctx.send("Error: " + str(e))			#make asnyc
 
 	@commands.command()
 	@commands.cooldown(rate=1, per=2.0, type=commands.BucketType.user)
@@ -171,7 +136,7 @@ class Utillity(commands.Cog):
 			await ctx.send("Error: " + str(e))
 
 	@commands.command()
-	@commands.cooldown(rate=1, per=6.0, type=commands.BucketType.user)
+	@commands.cooldown(rate=1, per=6.0, type=commands.BucketType.user) #make asnyc
 	async def gsearch(self, ctx, *, searchQ: str):   #searches google for query
 		"""Searches something on google.
 		Example: u.search How to make pizza"""
@@ -213,12 +178,12 @@ class Utillity(commands.Cog):
 
 	@commands.command()
 	@commands.cooldown(rate=1, per=5.0, type=commands.BucketType.user)
-	async def translate(self, ctx, text: str, toLang='_', fromLang='0'): #translates text via google translate
+	async def translate(self, ctx, text: str, toLang=None, fromLang=None): #translates text via google translate
 		"""Translates text via Google Translate. Put your text in quotes fromLang is the origin language and toLang is the target language. Make sure to spell the languages right.
 		Examples: 
 		u.translate "kako si?" (fromLang and toLang is not here so it auto detects and translates to English)
 		u.translate "je suis faim" spanish (toLang is specified and translates to Spanish)
-		u.translate "no habla espanol" spanish french (fromLang and toLang are specified and it does the translation)
+		u.translate "no habla espanol" french spanish (fromLang and toLang are specified and it does the translation)
 		"""		
 		cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
 		cmdsList = ['0']
@@ -238,53 +203,48 @@ class Utillity(commands.Cog):
 		if ctx.message.channel.id in channelList:
 			return
 		await ctx.channel.trigger_typing() 
-		translator = Translator() #generates translator item
+		translator = async_google_trans_new.google_translator()
 
-		conversionKey = pygoogletranslation.LANGUAGES #grabs lang codes to physical languages
-		reversed_dictionary = {value : key for (key, value) in conversionKey.items()} #reverses it for frontend
+		conversionKey = async_google_trans_new.LANGUAGES
+		reversed_dictionary = {value : key for (key, value) in conversionKey.items()}
 
-		if toLang == '_' and fromLang == '0': #if no languages are specified
-			result = translator.translate(text) 
-			resultSRCconv = result.src.lower() #converts lang code to lowercase
-			convertedSrc = conversionKey[resultSRCconv] #converts code to word
+		if toLang == None and fromLang == None: 
+			result = await translator.translate(text) 
+			source = await translator.detect(text)
 
-				#embed stuff
 			embed = discord.Embed(title="**Queros Translate**", description="Here's the translated text!", color=0x2b00ff) 
-			embed.add_field(name=convertedSrc.capitalize(), value=text, inline=True)
-			embed.add_field(name="English", value=result.text, inline=True)
+			embed.add_field(name=source[1].capitalize(), value=text, inline=True)
+			embed.add_field(name="English", value=result, inline=True)
 
 			await ctx.send(embed=embed)
 			return
 
-		elif fromLang == '0': #if dest lang is specified
-			toLanglow = toLang.lower() #grabs lowercase dest lang
-			toLangDictC = reversed_dictionary[toLanglow] #converts language name to code
+		elif fromLang == None:
+			toLanglow = toLang.lower()
+			toLangDictC = reversed_dictionary[toLanglow]
 
-			result = translator.translate(text, dest=toLangDictC) 
-			resultSRCconv = result.src.lower() #lowers the origin lang src
-			convertedSrc = conversionKey[resultSRCconv] #converts src to language
+			result = await translator.translate(text, lang_tgt=toLangDictC) 
+			source = await translator.detect(text)
 
-				#embed stuff
 			embed = discord.Embed(title="**Queros Translate**", description="Here's the translated text!", color=0x2b00ff)
-			embed.add_field(name=convertedSrc.capitalize(), value=text, inline=True)
-			embed.add_field(name=toLang.capitalize(), value=result.text, inline=True)
+			embed.add_field(name=source[1].capitalize(), value=text, inline=True)
+			embed.add_field(name=toLang.capitalize(), value=result, inline=True)
 
 			await ctx.send(embed=embed)
 			return
 
-		elif fromLang != '0' and toLang != '_': #if languages are specified
+		elif fromLang != None and toLang != None: #if languages are specified
 			fromLanglow = fromLang.lower() #lowers languages
 			toLanglow = toLang.lower()
 
 			fromLangDictC = reversed_dictionary[fromLanglow] #converts to codes
 			toLangDictC = reversed_dictionary[toLanglow]
 
-			result = translator.translate(text, src=fromLangDictC, dest=toLangDictC)
+			result = await translator.translate(text, lang_tgt=toLangDictC, lang_src=fromLangDictC) 
 
-				#embed stuff
 			embed = discord.Embed(title="**Queros Translate**", description="Here's the translated text!", color=0x2b00ff)
 			embed.add_field(name=fromLang.capitalize(), value=text, inline=True)
-			embed.add_field(name=toLang.capitalize(), value=result.text, inline=True)
+			embed.add_field(name=toLang.capitalize(), value=result, inline=True)
 
 			await ctx.send(embed=embed)
 			return
