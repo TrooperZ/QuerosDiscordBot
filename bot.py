@@ -90,7 +90,7 @@ if __name__ == '__main__':
     for extension in ['cogs.utillity', 'cogs.fun', 'cogs.configuration', 'cogs.moderation', 'cogs.economy', 'cogs.botinfo', 'cogs.image', 'cogs.music']:
         bot.load_extension(extension)
 
-@tasks.loop(seconds=60)
+@tasks.loop(seconds=360)
 async def statusLoop():
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="u.help in " + str(len(bot.guilds)) + " servers"))
 
