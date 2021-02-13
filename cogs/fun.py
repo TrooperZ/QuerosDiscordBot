@@ -23,12 +23,39 @@ reddit = asyncpraw.Reddit(client_id=os.getenv('REDDIT_CLIENT_ID'),
 					 user_agent='QuerosDiscordBot accessAPI:v0.0.1 (by /u/Troopr_Z)',
 					 username=os.getenv('REDDIT_USERNAME'))
 
+bot._deleted__messages_ = [] 
+
+class MinimalDeletedMessage:
+	__slots__ = ('author', 'content', 'channel', 'guild', 'created_at', 'deleted_at')
+	def __init__(self, message):
+		self.author = message.author
+		self.content = message.content
+		self.guild = mesasge.guild
+		self.created_at = message.created_at
+		self.deleted_at = datetime.datetime.utcnow() 
+
+def deleted_message_for(index: int):
+	if index > len(bot._deleted__messages_):
+		return None
+
+	readable_order = reversed(bot._deleted__messages_)
+	try:
+		result = readable_order[index]
+	except KeyError:
+		return None
+	else:
+		return result
+
 class Fun(commands.Cog):
 	"""Have lots of laughs with these commands!"""
 	def __init__(self, bot):
 		self.bot = bot
 		self.configcol = self.bot.mongodatabase["configs"]
 		self.bot.dagpi = bot.dagpi
+
+	@commands.Cog.listener()
+	async def on_message_delete(message):
+		bot._deleted__messages_.append(MinimalDeletedMessage(message))
 
 	@commands.command()
 	@commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
@@ -119,27 +146,12 @@ class Fun(commands.Cog):
 			return
 		await ctx.send(await self.bot.dagpi.yomama())
 
-	#@commands.command()
-	#@commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
-	#async def waifu(self, ctx):
-	#	"""Waifu"""
-	#	cmds = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-	#	cmdsList = ['0']
-	#	for i in cmds:
-	#		cmdOff = i['commands']
-	#		cmdsList.extend(cmdOff)
-	#	if 'waifu' in cmdsList:
-	#		return
-
-	#	channelList = ['0']
-	#	channels = self.configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-	#	for i in channels:
-	#		channeloff = i['channels']
-	#		channelList.extend(channeloff)
-	#	if ctx.message.channel.id in channelList:
-	#		return
-	#	await ctx.send(await self.bot.dagpi.waifu())
+	@commands.command()
+	async def snipe(ctx, index: int):
+		msg = deleted_message_for(index) 
+		if not msg:
+			await ctx.send("Nothing here bruv..")
+		await ctx.send(msg)
 
 	@commands.command(aliases=['murder'])
 	@commands.cooldown(rate=1, per=5.0, type=commands.BucketType.user)
