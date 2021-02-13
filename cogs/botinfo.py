@@ -38,7 +38,7 @@ class BotInfo(commands.Cog):
 	@commands.cooldown(rate=1, per=5, type=commands.BucketType.user)
 	async def website(self, ctx):
 		"""Bot's website"""
-		await ctx.send("http://queros.live/index.html?i=1")
+		await ctx.send("We do not have a website yet.")
 
 	@commands.command()
 	@commands.cooldown(rate=1, per=2, type=commands.BucketType.user)
