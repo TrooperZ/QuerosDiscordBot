@@ -54,7 +54,7 @@ class BotInfo(commands.Cog):
 		uptime = f"{days}d, {hours}h, {minutes}m, {seconds}s"
 		embed=discord.Embed(title="Queros Information", description="Info about creator and bot status")
 		embed.add_field(name="Uptime:", value=uptime, inline=True)
-		embed.add_field(name="Creator:", value="TrooperZ#7824", inline=True)
+		embed.add_field(name="Creator:", value="TrooperZ", inline=True)
 		embed.add_field(name="Total Users", value=str(len(set(self.bot.users))), inline=True)
 		embed.add_field(name="Total Servers", value=str(len(self.bot.guilds)), inline=True)
 		embed.add_field(name="Language Used", value="Python, using discord.py", inline=True)
