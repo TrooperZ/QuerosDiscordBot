@@ -356,3 +356,6 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+*.cfg
+/Queros/Scripts
+/Queros/Lib/site-packages

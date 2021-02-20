@@ -1,131 +1,265 @@
-import pymongo
-import discord
-from discord.ext import commands
-from discord.ext import tasks
-import sys
 import os
 import random
+import sys
+import secrets
+
+import discord
+import pymongo
+from discord.ext import commands, tasks
 from dotenv import load_dotenv
+from captcha.image import ImageCaptcha
 
 load_dotenv()
 
-MONGO_PASS = os.getenv('MONGO_PASS')
-myclient = pymongo.MongoClient("mongodb+srv://queroscode:" + MONGO_PASS + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority")
+MONGO_PASS = os.getenv("MONGO_PASS")
+myclient = pymongo.MongoClient(
+    "mongodb+srv://queroscode:"
+    + MONGO_PASS
+    + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority"
+)
 mydb = myclient["data"]
 modcol = mydb["moderation"]
 configcol = mydb["configs"]
-balcol = mydb['balances']
+balcol = mydb["balances"]
+
 
 class Configuration(commands.Cog):
-	"""Configure bot server settings"""
+    """Configure bot server settings"""
+    def __init__(self, bot):
+        self.bot = bot
 
-	@commands.command()
-	@commands.has_permissions(manage_guild=True)
-	async def togglecommand(self, ctx, cmd: str, yN: str):
-		"""Toggles commands, currently moderation does not have this ability."""
-		if yN not in ('on', 'off'):
-			await ctx.send("Please choose a valid level, on or off.")
-			return
+    @commands.command()
+    @commands.has_permissions(manage_guild=True)
+    async def togglecommand(self, ctx, cmd: str, yN: str):
+        """Toggles commands, currently moderation does not have this ability."""
+        if yN not in ("on", "off"):
+            await ctx.send("Please choose a valid level, on or off.")
+            return
 
-		if yN == 'off':
-			logging = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-			listcmd = []
-			for i in logging:
-				listcmd.extend(i['commands'])
-			listcmd.append(cmd)
-			configcol.update_one({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]}, {"$set":{'cfg_type':'cmdsoff', 'guild':ctx.guild.id, 'commands':listcmd}}, upsert=True)
-			await ctx.send(f"Added **{cmd}** to off list.")
+        if yN == "off":
+            logging = configcol.find(
+                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
+            )
+            listcmd = []
+            for i in logging:
+                listcmd.extend(i["commands"])
+            listcmd.append(cmd)
+            configcol.update_one(
+                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]},
+                {
+                    "$set": {
+                        "cfg_type": "cmdsoff",
+                        "guild": ctx.guild.id,
+                        "commands": listcmd,
+                    }
+                },
+                upsert=True,
+            )
+            await ctx.send(f"Added **{cmd}** to off list.")
 
-		if yN == 'on':
-			logging = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-			for i in logging:
-				listcmd = []
-				listcmd.extend(i['commands'])
-			listcmd.remove(cmd)
-			configcol.update_one({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]}, {"$set":{'cfg_type':'cmdsoff', 'guild':ctx.guild.id, 'commands':listcmd}}, upsert=True)
-			await ctx.send(f"Removed **{cmd}** from off list.")
+        if yN == "on":
+            logging = configcol.find(
+                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
+            )
+            for i in logging:
+                listcmd = []
+                listcmd.extend(i["commands"])
+            listcmd.remove(cmd)
+            configcol.update_one(
+                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]},
+                {
+                    "$set": {
+                        "cfg_type": "cmdsoff",
+                        "guild": ctx.guild.id,
+                        "commands": listcmd,
+                    }
+                },
+                upsert=True,
+            )
+            await ctx.send(f"Removed **{cmd}** from off list.")
 
-	@commands.command()
-	@commands.has_permissions(manage_guild=True)
-	async def togglechannel(self, ctx, channel: discord.TextChannel, yN: str):
-		"""Toggles which channel the bot to ignore, currently moderation does not have this ability."""
-		if yN not in ('on', 'off'):
-			await ctx.send("Please choose a valid level, on or off.")
-			return
-		if yN == 'off':
-			logging = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-			channels = []
-			for i in logging:
-				channels.extend(i['channels'])
-			channels.append(channel.id)
-			configcol.update_one({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]}, {"$set":{'cfg_type':'channeloff', 'guild':ctx.guild.id, 'channels':channels}}, upsert=True)
-			await ctx.send(f"Added **{channel}** to off list.")
+    @commands.command()
+    @commands.has_permissions(manage_guild=True)
+    async def togglechannel(self, ctx, channel: discord.TextChannel, yN: str):
+        """Toggles which channel the bot to ignore, currently moderation does not have this ability."""
+        if yN not in ("on", "off"):
+            await ctx.send("Please choose a valid level, on or off.")
+            return
+        if yN == "off":
+            logging = configcol.find(
+                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
+            )
+            channels = []
+            for i in logging:
+                channels.extend(i["channels"])
+            channels.append(channel.id)
+            configcol.update_one(
+                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]},
+                {
+                    "$set": {
+                        "cfg_type": "channeloff",
+                        "guild": ctx.guild.id,
+                        "channels": channels,
+                    }
+                },
+                upsert=True,
+            )
+            await ctx.send(f"Added **{channel}** to off list.")
 
-		if yN == 'on':
-			logging = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-			for i in logging:
-				channels = []
-				channels.extend(i['channels'])
-			channels.remove(channel.id)
-			configcol.update_one({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]}, {"$set":{'cfg_type':'channeloff', 'guild':ctx.guild.id, 'channels':channels}}, upsert=True)
-			await ctx.send(f"Removed **{channel}** from off list.")
+        if yN == "on":
+            logging = configcol.find(
+                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
+            )
+            for i in logging:
+                channels = []
+                channels.extend(i["channels"])
+            channels.remove(channel.id)
+            configcol.update_one(
+                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]},
+                {
+                    "$set": {
+                        "cfg_type": "channeloff",
+                        "guild": ctx.guild.id,
+                        "channels": channels,
+                    }
+                },
+                upsert=True,
+            )
+            await ctx.send(f"Removed **{channel}** from off list.")
 
-	@commands.command()
-	@commands.has_permissions(manage_guild=True)
-	async def togglecategory(self, ctx, category: str, yN: str):
-		"""Toggles which channel the bot to ignore, currently moderation does not have this ability."""
-		if yN not in ('on', 'off'):
-			await ctx.send("Please choose a valid level, on or off.")
-			return
-		if yN == 'off':
-			logging = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'categoryoff'}]})
-			categories = []
-			for i in logging:
-				cateogries.extend(i['categories'])
-			categories.append(category)
-			configcol.update_one({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'categoryoff'}]}, {"$set":{'cfg_type':'categoryoff', 'guild':ctx.guild.id, 'categories':categories}}, upsert=True)
-			await ctx.send(f"Added **{category}** to off list.")
+    @commands.command()
+    @commands.has_permissions(manage_guild=True)
+    async def togglecategory(self, ctx, category: str, yN: str):
+        """Toggles which channel the bot to ignore, currently moderation does not have this ability."""
+        if yN not in ("on", "off"):
+            await ctx.send("Please choose a valid level, on or off.")
+            return
+        if yN == "off":
+            logging = configcol.find(
+                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "categoryoff"}]}
+            )
+            categories = []
+            for i in logging:
+                cateogries.extend(i["categories"])
+            categories.append(category)
+            configcol.update_one(
+                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "categoryoff"}]},
+                {
+                    "$set": {
+                        "cfg_type": "categoryoff",
+                        "guild": ctx.guild.id,
+                        "categories": categories,
+                    }
+                },
+                upsert=True,
+            )
+            await ctx.send(f"Added **{category}** to off list.")
 
-		if yN == 'on':
-			logging = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'categoryoff'}]})
-			categories = []
-			for i in logging:
-				categories.extend(i['categories'])
-			categories.remove(category)
-			configcol.update_one({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'categoryoff'}]}, {"$set":{'cfg_type':'categoryoff', 'guild':ctx.guild.id, 'categories':categories}}, upsert=True)
-			await ctx.send(f"Removed **{category}** from off list.")
+        if yN == "on":
+            logging = configcol.find(
+                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "categoryoff"}]}
+            )
+            categories = []
+            for i in logging:
+                categories.extend(i["categories"])
+            categories.remove(category)
+            configcol.update_one(
+                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "categoryoff"}]},
+                {
+                    "$set": {
+                        "cfg_type": "categoryoff",
+                        "guild": ctx.guild.id,
+                        "categories": categories,
+                    }
+                },
+                upsert=True,
+            )
+            await ctx.send(f"Removed **{category}** from off list.")
 
-	#@commands.command()
-	#@commands.has_permissions(manage_guild=True)
-	#async def startticketing(self, ctx, channeltick: discord.TextChannel):
-	#	"""Select a channel for the ticket function (broken rn)"""
-	#	mainmsg = await channeltick.send("To create a ticket for help with moderators, react with :ticket:")
-	#	await mainmsg.add_reaction("\U0001f3ab")
-	#	configcol.update_one({"$and": [{"guild": ctx.guild}, {"cfg_type": 'ticketchannel'}]}, {"$set":{'cfg_type':'ticketchannel', 'guild':ctx.guild.id, 'msg':mainmsg.id, 'channel':channeltick.id}}, upsert=True)
+    @commands.command()
+    @commands.has_permissions(manage_guild=True)
+    async def captchaconfig(self, ctx, toggle: str):
+        """Configures captcha."""
+        if toggle not in ("on", "off"):
+            await ctx.send("Choose a valid option, on or off")
+            return
+        if toggle == "off":
+            logging = configcol.find(
+                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "captcha"}]}
+            )
+            configcol.update_one(
+                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "captcha"}]},
+                {
+                    "$set": {
+                        "cfg_type": "captcha",
+                        "guild": ctx.guild.id,
+                        "status":toggle,
+                    }
+                },
+                upsert=True,
+            )
+            await ctx.send(f"Disabled captcha.")
 
-	#@tasks.loop(seconds=5)
-	#async def ticketManager(self):
-	#	channel = configcol.find({"cfg_type": 'ticketchannel'})
-	#	for i in channel:
-	#		ticketmsg = channel['msg']
-	#		channelID= channel['channeltick']
-			
-	#		server = channel['guild']
-	#		reaction = await bot.wait_for_reaction(emoji="🎫", message=ticketmsg)
-	#		ticketID = random.randint(1, 100000)
-	#		overwrites = {
-	#				guild.default_role: discord.PermissionOverwrite(read_messages=False),
-	#				guild.me: discord.PermissionOverwrite(read_messages=True),
-	#				guild.get_member(reaction.author.id): discord.PermissionOverwrite(read_messages=True)
-	#			}	
-	#		await server.create_text_channel(f'ticket-{str(ticketID)}', overwrites=overwrites)
+        if toggle == "on":
+            logging = configcol.find(
+                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "captcha"}]}
+            )
+            configcol.update_one(
+                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "captcha"}]},
+                {
+                    "$set": {
+                        "cfg_type": "captcha",
+                        "guild": ctx.guild.id,
+                        "status":toggle,
+                    }
+                },
+                upsert=True,
+            )
+            await ctx.send("Enabled captcha. Users will need to enable DMs and complete captcha to get the Captcha Verified role. Make sure to give the everyone role no permission to send messages.")
 
-	#@commands.Cog.listener()
-	#async def on_ready(self):
-		#self.ticketManager.start()
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        log = configcol.find(
+            {"$and": [{"guild": member.guild.id}, {"cfg_type": "captcha"}]}
+        )
+        capStat = 'off'
+        for i in log:
+            capStat = i['status']
+        if capStat == 'off':
+            return
+        msg = await member.send(f"Hey there {member}, we just need to do one little thing to make sure you're a human and not anything malicious... Please complete this captcha:")
+        image = ImageCaptcha()
+        captchaAMT = secrets.token_urlsafe(3)
+        data = image.generate(captchaAMT)
+        image.write(captchaAMT, f"{captchaAMT}CAPTCHA.png")
+        await member.send(file=discord.File(f"{captchaAMT}CAPTCHA.png"))
+        def check(c):
+            return m.content == captcha and m.guild == None
+
+        await self.bot.wait_for('message')
+        await member.send("Captcha verified. Giving you access...")
+
+        if discord.utils.get(member.guild.roles, name="Captcha Verified"):
+            role = discord.utils.get(member.guild.roles, name="Captcha Verified")
+
+            await member.add_roles(role)
+
+            for channel in member.guild.channels:
+                await channel.set_permissions(role, send_messages=True)
+
+        else:
+            perms = discord.Permissions(send_messages=True)
+            await member.guild.create_role(name="Captcha Verified", permissions=perms)
+
+            role = discord.utils.get(member.guild.roles, name="Captcha Verified")
+            await role.edit(position=1)
+            await member.add_roles(role)
+
+            for channel in member.guild.channels:
+                await channel.set_permissions(role, send_messages=True)
 
 
 
-#setups command.  command is needed, make sure to use cogs.[name of file]
+# setups command.  command is needed, make sure to use cogs.[name of file]
 def setup(bot):
-	bot.add_cog(Configuration(bot))
+    bot.add_cog(Configuration(bot))
