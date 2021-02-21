@@ -24,7 +24,7 @@ class Dev(commands.Cog):
     async def getguilds(self, ctx):
         for i in bot.guilds:
             await ctx.send(i.name)
-            asyncio.sleep(1)
+            await asyncio.sleep(1)
 
     @commands.command(hidden=True)
     @commands.is_owner()
