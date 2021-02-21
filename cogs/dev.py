@@ -35,7 +35,7 @@ class Dev(commands.Cog):
     @commands.is_owner()
     async def reload_cog(self, ctx, cog: str):
         try:
-            bot.reload_extension(cog)
+            self.bot.reload_extension(cog)
         except Exception as e:
             await ctx.send(e)
         await ctx.send("done")
