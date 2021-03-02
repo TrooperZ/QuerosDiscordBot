@@ -319,17 +319,19 @@ class Music(commands.Cog):
             else:
                 return
 
+        premCmd = ['vol', 'volume', 'eq', 'equalizer']
+
         server = self.premServercol.find({"server": ctx.guild.id})
         status = "off"
+        if ctx.invoked_with in premCmd:
+            for x in server:
+                status = x["status"]
 
-        for x in server:
-            status = x["status"]
+            if status == "on":
+                return True
 
-        if status == "on":
-            return True
-
-        else:
-            raise premiumServer_error()
+            else:
+                raise premiumServer_error()
 
     @tasks.loop(seconds=120)  # if bot is inactive for 2 minutes, it leaves
     async def timeOutMusic(self):
@@ -374,7 +376,7 @@ class Music(commands.Cog):
         if isinstance(error, premiumServer_error):  # premium server error
             embed = embed = discord.Embed(
                 title="Command is for Qu+ Server Only",
-                description="This command is only for Qu+ Servers. Use u.premium to get a premium server/account.\nPlease subscribe and help the developer here. By subscribing to Qu+ services, you help the developer continue making the bot and pay for server fees. (I'm a high school freshman so this really helps)",
+                description="This command is only for Qu+ Servers. Use u.premium to get a premium server/account.\nPlease subscribe and help the developer here. By subscribing to Qu+ services, you help the developer continue making the bot and pay for server fees.",
                 color=0x6BD5FF,
             )
             await ctx.send(embed=embed)
@@ -679,6 +681,7 @@ class Music(commands.Cog):
                         queue.skip()
             except:
                 pass
+
 
     @commands.command()
     async def playskip(self, ctx, *, query):
