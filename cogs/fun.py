@@ -228,9 +228,7 @@ class Fun(commands.Cog):
         try:
             subredditGrabbed = await reddit.subreddit(subreddit)
         except Exception as e:
-            await ctx.send(
-                "Hmm, there was an issue getting that subreddit. Make sure to type the subreddit without the r/."
-            )
+            await ctx.send("Hmm, there was an issue getting that subreddit. Make sure to type the subreddit without the r/.")
             print(e)
         Listposts = []
         randomPost = random.randint(1, 120)

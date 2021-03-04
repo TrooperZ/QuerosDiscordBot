@@ -79,7 +79,7 @@ class Image(commands.Cog):
         for i in cmds:
             cmdOff = i["commands"]
             cmdsList.extend(cmdOff)
-        if "pixel" in cmdsList:
+        if "blur" in cmdsList:
             return
 
         channelList = ["0"]
@@ -172,6 +172,54 @@ class Image(commands.Cog):
             pic = discord.File(f"imageDeepfried{imageID}.png")
             await ctx.send(file=pic)
 
+
+    @commands.command()
+    @commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
+    async def invert(self, ctx, user=None):
+        """Inverts an image."""
+        cmds = self.configcol.find(
+            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
+        )
+        cmdsList = ["0"]
+        for i in cmds:
+            cmdOff = i["commands"]
+            cmdsList.extend(cmdOff)
+        if "invert" in cmdsList:
+            return
+
+        channelList = ["0"]
+        channels = self.configcol.find(
+            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
+        )
+
+        for i in channels:
+            channeloff = i["channels"]
+            channelList.extend(channeloff)
+        if ctx.message.channel.id in channelList:
+            return
+
+        if user == None:
+            for attachment in ctx.message.attachments:
+                img = await self.bot.dagpi.image_process(
+                    asyncdagpi.ImageFeatures.invert(), attachment.proxy_url
+                )
+                file = discord.File(fp=img.image, filename=f"invert.{img.format}")
+                await ctx.send(file=file)
+
+        else:
+            userID = re.sub("[^0-9]", "", user)
+            try:
+                user = await ctx.guild.fetch_member(userID)
+            except:
+                await ctx.send("No user found.")
+                return
+
+            url = str(user.avatar_url_as(format="png", size=1024))
+            img = await self.bot.dagpi.image_process(
+                asyncdagpi.ImageFeatures.invert(), url
+            )
+            file = discord.File(fp=img.image, filename=f"invert.{img.format}")
+            await ctx.send(file=file)
 
 def setup(bot):
     bot.add_cog(Image(bot))
