@@ -202,8 +202,8 @@ class Fun(commands.Cog):
 
     @commands.command()
     @commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
-    async def redditgrab(self, ctx, subreddit: str, spoiler="no"):
-        """Grabs a post from reddit subreddit, add spoiler to make the image a spoiler"""
+    async def redditgrab(self, ctx, subreddit: str, spoiler: str):
+        """Grabs a post from reddit subreddit, add tag spoiler to add a spoiler."""
         cmds = self.configcol.find(
             {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
         )
@@ -238,6 +238,9 @@ class Fun(commands.Cog):
 
         if post.over_18:
             if ctx.channel.is_nsfw():
+                if spoiler == "spoiler":
+                    await ctx.send("Spoiler is currently broken :/ The dev is trying to fix it bear with him.")
+                    return
                 embed = discord.Embed(
                     title=post.title,
                     description="Posted by: " + str(post.author),
@@ -253,11 +256,12 @@ class Fun(commands.Cog):
                 await ctx.send(embed=embed)
 
             else:
-                await ctx.send(
-                    "Content is NSFW, this channel is not NSFW, content will not be loaded."
-                )
+                await ctx.send("Content is NSFW, this channel is not NSFW, content will not be loaded.")
 
         if post.over_18 == False:
+            if spoiler == "spoiler":
+                await ctx.send("Spoiler is currently broken :/ The dev is trying to fix it bear with him.")
+                return
             embed = discord.Embed(
                 title=post.title,
                 description="Posted by: " + str(post.author),
