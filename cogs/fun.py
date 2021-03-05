@@ -9,6 +9,9 @@ import random
 import re
 import sys
 
+
+import aiofiles
+import aiohttp
 import asyncdagpi
 import asyncpraw
 import deeppyer
@@ -202,7 +205,7 @@ class Fun(commands.Cog):
 
     @commands.command()
     @commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
-    async def redditgrab(self, ctx, subreddit: str, spoiler: str):
+    async def redditgrab(self, ctx, subreddit: str, spoiler="no"):
         """Grabs a post from reddit subreddit, add tag spoiler to add a spoiler."""
         cmds = self.configcol.find(
             {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
@@ -239,8 +242,17 @@ class Fun(commands.Cog):
         if post.over_18:
             if ctx.channel.is_nsfw():
                 if spoiler == "spoiler":
-                    await ctx.send("Spoiler is currently broken :/ The dev is trying to fix it bear with him.")
-                    return
+                    imgId = random.randint(1,10000)
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(post.url) as resp:
+                            if resp.status == 200:
+                                f = await aiofiles.open(f'SPOILER_imageNSFW{imgId}.jpg', mode='wb')
+                                await f.write(await resp.read())
+                                await f.close()
+                    with open(f'SPOILER_imageNSFW{imgId}.jpg', 'rb') as f:
+                            picture = discord.File(f)
+                            await ctx.send(file=picture)
+
                 embed = discord.Embed(
                     title=post.title,
                     description="Posted by: " + str(post.author),
@@ -260,7 +272,16 @@ class Fun(commands.Cog):
 
         if post.over_18 == False:
             if spoiler == "spoiler":
-                await ctx.send("Spoiler is currently broken :/ The dev is trying to fix it bear with him.")
+                imgId = random.randint(1,10000)
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(post.url) as resp:
+                        if resp.status == 200:
+                            f = await aiofiles.open(f'SPOILER_image{imgId}.jpg', mode='wb')
+                            await f.write(await resp.read())
+                            await f.close()
+                with open(f'SPOILER_image{imgId}.jpg', 'rb') as f:
+                        picture = discord.File(f)
+                        await ctx.send(file=picture)
                 return
             embed = discord.Embed(
                 title=post.title,
