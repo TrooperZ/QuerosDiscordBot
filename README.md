@@ -32,7 +32,7 @@ Message me on Discord or go on the support server and request your server to hav
 
 **Have any questions?**
 
-Join the support server [here](https://discord.gg/7qvsUCBZ8W).
+Join the support server [here](https://discord.gg/7qvsUCBZ8W). Do not DM me, you must join that server and ping me.
 
 Also, be sure to help me out by donating!
 
