@@ -154,9 +154,6 @@ class Fun(commands.Cog):
             msg = self.bot.snipes[channel.id]
         except KeyError:
             return await ctx.send("Nothing to snipe!")
-        if msg.author.id == 390841378277425153 and ctx.author != msg.author:
-            await ctx.send("I cannot snipe my owner's messages.")
-            return
         embed = discord.Embed(
             description=msg.content, color=msg.author.color
         ).set_author(name=str(msg.author), icon_url=str(msg.author.avatar_url))

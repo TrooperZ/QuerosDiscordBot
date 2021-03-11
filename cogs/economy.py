@@ -579,6 +579,49 @@ class Economy(commands.Cog):
             await ctx.send("Hmm, no bank found. Open a bank by using u.bankopen!")
             return
 
+    @commands.command()
+    @commands.cooldown(rate=1, per=30.0, type=commands.BucketType.user)
+    async def plscoins(self, ctx):
+        """Looks for coins"""
+        cmds = self.configcol.find(
+            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
+        )
+        cmdsList = ["0"]
+        for i in cmds:
+            cmdOff = i["commands"]
+            cmdsList.extend(cmdOff)
+        if "plscoins" in cmdsList:
+            return
+
+        channelList = ["0"]
+        channels = self.configcol.find(
+            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
+        )
+
+        for i in channels:
+            channeloff = i["channels"]
+            channelList.extend(channeloff)
+
+        if ctx.message.channel.id in channelList:
+            return
+        randomCoins = random.randint(1, 10)
+        balance = self.balcol.find({"user": ctx.message.author.id})
+
+        for x in balance:
+            wallet = int(x["wallet"])
+
+        try:
+            self.balcol.update_one(
+                {"user": ctx.message.author.id},
+                {"$set": {"wallet": wallet + randomCoins}},
+                upsert=False,
+            )
+
+        except UnboundLocalError:
+            await ctx.send("Hmm, no bank found. Open a bank by using u.bankopen!")
+            return
+
+        await ctx.send(f"Here you go, **{randomCoins}** have been added to ur wallet.")
 
 def setup(bot):
     bot.add_cog(Economy(bot))
