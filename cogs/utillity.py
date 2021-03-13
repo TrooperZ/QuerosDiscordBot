@@ -32,7 +32,34 @@ class Utillity(commands.Cog):
         # Initalizes bot.
         self.bot = bot
         self.configcol = self.bot.mongodatabase["configs"]
+    
+    @commands.command()
+    async def poll(self, ctx, option1="none", option2="none", option3="none", option4="none"):
+        """Create a poll that users can use to vote. Max 4 options. Options must be in quotes."""
+        if option1 == "none" or option2 == "none":
+            await ctx.send("Option 1 and 2 must have content.")
+            return
+        embed = discord.Embed(title=f"{ctx.author.name}'s poll", description="Click on the reaction to vote!")
+        embed.add_field(name=":one:", value=option1)
+        embed.add_field(name=":two:", value=option2)
 
+        if option3 != "none":
+            embed.add_field(name=":three:", value=option3)
+
+        if option4 != "none":
+            embed.add_field(name=":four:", value=option4)
+
+        message = await ctx.send(embed=embed)
+
+        await message.add_reaction("1️⃣")
+        await message.add_reaction("2️⃣")
+
+        if option3 != "none":
+            await message.add_reaction("3️⃣")
+
+        if option4 != "none":
+            await message.add_reaction("4️⃣")
+    
     @commands.command()
     @commands.cooldown(rate=1, per=2.0, type=commands.BucketType.user)
     async def stonks(self, ctx, stock: str, time="1d"):
