@@ -34,12 +34,13 @@ class Utillity(commands.Cog):
         self.configcol = self.bot.mongodatabase["configs"]
     
     @commands.command()
-    async def poll(self, ctx, option1="none", option2="none", option3="none", option4="none"):
-        """Create a poll that users can use to vote. Max 4 options. Options must be in quotes."""
+    async def poll(self, ctx, descript, option1="none", option2="none", option3="none", option4="none"):
+        """Create a poll that users can use to vote. Max 4 options. Options must be in quotes. Description is required."""
         if option1 == "none" or option2 == "none":
             await ctx.send("Option 1 and 2 must have content.")
             return
-        embed = discord.Embed(title=f"{ctx.author.name}'s poll", description="Click on the reaction to vote!")
+
+        embed = discord.Embed(title=f"{ctx.author.name}'s poll", description=descript)
         embed.add_field(name=":one:", value=option1)
         embed.add_field(name=":two:", value=option2)
 
