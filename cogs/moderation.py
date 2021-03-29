@@ -271,6 +271,33 @@ class Moderation(commands.Cog):
             await ctx.send("Duration must be longer than 30 seconds.")
             return
 
+        if discord.utils.get(ctx.guild.roles, name="Voice Muted"):
+            role = discord.utils.get(ctx.guild.roles, name="Voice Muted")
+
+            await user.add_roles(role)
+
+            for channel in ctx.guild.channels:
+                await channel.set_permissions(role, speak=False)
+
+        else:
+            perms = discord.Permissions(speak=False)
+            await ctx.guild.create_role(
+                name="Voice Muted", permissions=perms, color=Rcolor
+            )
+
+            role = discord.utils.get(ctx.guild.roles, name="Voice Muted")
+            await role.edit(position=1)
+            await user.add_roles(role)
+
+            overwrites = {
+                Muted: discord.PermissionOverwrite(
+                    speak=False
+                )
+            }
+
+            for channel in ctx.guild.channels:
+                await channel.set_permissions(role, speak=False)
+
         vcmutelisting = {
             "userid": user.id,
             "guildid": ctx.message.guild.id,
@@ -316,7 +343,32 @@ class Moderation(commands.Cog):
             "punisher": ctx.author.id,
         }
 
-        await user.edit(mute=True)
+        if discord.utils.get(ctx.guild.roles, name="Voice Muted"):
+            role = discord.utils.get(ctx.guild.roles, name="Voice Muted")
+
+            await user.add_roles(role)
+
+            for channel in ctx.guild.channels:
+                await channel.set_permissions(role, speak=False)
+
+        else:
+            perms = discord.Permissions(speak=False)
+            await ctx.guild.create_role(
+                name="Voice Muted", permissions=perms, color=Rcolor
+            )
+
+            role = discord.utils.get(ctx.guild.roles, name="Voice Muted")
+            await role.edit(position=1)
+            await user.add_roles(role)
+
+            overwrites = {
+                Muted: discord.PermissionOverwrite(
+                    speak=False
+                )
+            }
+
+            for channel in ctx.guild.channels:
+                await channel.set_permissions(role, speak=False)
 
         vcmute = discord.Embed(
             title=f":mute: PERMANENTLY Voice Muted {user.name}!\nGuild: {ctx.guild.name}",
@@ -334,98 +386,17 @@ class Moderation(commands.Cog):
     async def unvcmute(self, ctx, user: discord.Member):
         """Unmutes a user in voice channel (Needs Mute Members permissions)"""
 
-        await user.edit(mute=False)
-
-        vcmute = discord.Embed(
-            title=f":microphone2: Voice Unmuted {user.name}!\nGuild: {ctx.guild.name}",
-            description=f"Don't screw it up!\n**By:** {str(ctx.author)}",
-            color=0xD6DAEB,
-        )
-
-        await ctx.channel.send(embed=vcmute)
-        await user.send(embed=vcmute)
-        return
-
-    @commands.command()
-    @commands.has_guild_permissions(mute_members=True)
-    async def deafen(
-        self, ctx, user: discord.Member, duration: TimeConverter, *, reason="No reason"
-    ):
-        """Temp deafens a user in voice channel, does not mute. (Needs Mute Members permissions)"""
-        if duration < 30:
-            await ctx.send("Duration must be longer than 30 seconds.")
-            return
-
-        deafenlisting = {
-            "userid": user.id,
-            "guildid": ctx.message.guild.id,
-            "reason": reason,
-            "infraction": "Temp Deafen",
-            "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S ")
-            + time.strftime("%Z", time.gmtime()),
-            "removetime": float(duration) + time.time(),
-            "duration": display_time(duration),
-            "status": "open",
-            "punisher": ctx.author.id,
-        }
-
-        deafen = discord.Embed(
-            title=f":mute: Temporarily Deafened {user.name}!\nGuild: {ctx.guild.name}",
-            description=f"**Reason:** {reason}\n**By:** {str(ctx.author)}\n**Duration:** {display_time(duration)}",
-            color=0xB53737,
-        )
-
-        await user.edit(deafen=True)
-
-        await ctx.send(embed=deafen)
-        await user.send(embed=deafen)
-
-        self.modcol.insert_one(deafenlisting)
-
-    @commands.command()
-    @commands.has_guild_permissions(mute_members=True)
-    async def harddeafen(self, ctx, user: discord.Member, *, reason="No reason"):
-        """Perm deafens a user in voice channel, does not mute. (Needs Mute Members permissions)"""
-
-        deafenlisting = {
-            "userid": user.id,
-            "guildid": ctx.message.guild.id,
-            "reason": reason,
-            "infraction": "Perm Deafen",
-            "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S ")
-            + time.strftime("%Z", time.gmtime()),
-            "status": "finished",
-            "punisher": ctx.author.id,
-        }
-
-        deafen = discord.Embed(
-            title=f":mute: PERMANENTLY Deafened {user.name}!\nGuild: {ctx.guild.name}",
-            description=f"**Reason:** {reason}\n**By:** {str(ctx.author)}",
-            color=0xB53737,
-        )
-
-        await user.edit(deafen=True)
-
-        await ctx.send(embed=deafen)
-        await user.send(embed=deafen)
-
-        self.modcol.insert_one(deaflisting)
-
-    @commands.command()
-    @commands.has_guild_permissions(deafen_members=True)
-    async def undeafen(self, ctx, user: discord.Member):
-        """Undeafens a user in voice channel. (Needs Deafen Members permissions)"""
-
-        await user.edit(deafen=False)
-
-        mute = discord.Embed(
-            title=f"Undeafened {user.name}!\nGuild: {ctx.guild.name}",
+        role = discord.utils.get(ctx.guild.roles, name="Muted")
+        
+        await user.remove_roles(role)
+        unmute = discord.Embed(
+            title=f"Removed Text Mute from {user.name}!\nGuild: {ctx.guild.name}",
             description=f"Don't mess it up!\n**By:** {str(ctx.author)}",
             color=0xD6DAEB,
         )
+        await ctx.send(embed=unmute)
+        await user.send(embed=unmute)
 
-        await ctx.send(embed=mute)
-        await user.send(embed=mute)
 
     @commands.command()
     @commands.has_guild_permissions(move_members=True)
@@ -500,7 +471,7 @@ class Moderation(commands.Cog):
         else:
             perms = discord.Permissions(send_messages=False, read_messages=True)
             await ctx.guild.create_role(
-                name="Queros Muted", permissions=perms, color=Rcolor
+                name="Muted", permissions=perms, color=Rcolor
             )
 
             role = discord.utils.get(ctx.guild.roles, name="Muted")
