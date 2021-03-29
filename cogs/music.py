@@ -380,11 +380,13 @@ class Music(commands.Cog):
                 color=0x6BD5FF,
             )
             await ctx.send(embed=embed)
+            return
 
         if isinstance(error, dj_perm_error):  # permission error
             await ctx.send(
                 ":x: You need either the Manage Channels permissions or a role named `DJ` to perform this action."
             )
+            return
 
         if isinstance(error, disabledCommand_error):  # ignore disabled
             return
