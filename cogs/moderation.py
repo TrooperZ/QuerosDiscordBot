@@ -194,7 +194,7 @@ class Moderation(commands.Cog):
 
         await ctx.channel.send(embed=ban)
         try:
-            await user.send(embed=kick)
+            await user.send(embed=ban)
         except:
             await ctx.send("Couldn't DM the user. Oh well.")
 
@@ -227,7 +227,7 @@ class Moderation(commands.Cog):
 
         await ctx.channel.send(embed=ban)
         try:
-            await user.send(embed=kick)
+            await user.send(embed=ban)
         except:
             await ctx.send("Couldn't DM the user. Oh well.")
             
@@ -251,7 +251,7 @@ class Moderation(commands.Cog):
 
         await ctx.channel.send(embed=unban)
         try:
-            await user.send(embed=kick)
+            await user.send(embed=unban)
         except:
             await ctx.send("Couldn't DM the user. Oh well.")
             
@@ -329,7 +329,7 @@ class Moderation(commands.Cog):
 
         await ctx.channel.send(embed=vcmute)
         try:
-            await user.send(embed=kick)
+            await user.send(embed=vcmute)
         except:
             await ctx.send("Couldn't DM the user. Oh well.")
 
@@ -387,7 +387,7 @@ class Moderation(commands.Cog):
 
         await ctx.channel.send(embed=vcmute)
         try:
-            await user.send(embed=kick)
+            await user.send(embed=vcmute)
         except:
             await ctx.send("Couldn't DM the user. Oh well.")
 
@@ -408,7 +408,7 @@ class Moderation(commands.Cog):
         )
         await ctx.send(embed=unmute)
         try:
-            await user.send(embed=kick)
+            await user.send(embed=unmute)
         except:
             await ctx.send("Couldn't DM the user. Oh well.")
 
@@ -464,7 +464,7 @@ class Moderation(commands.Cog):
         )
         await ctx.send(embed=mute)
         try:
-            await user.send(embed=kick)
+            await user.send(embed=mute)
         except:
             await ctx.send("Couldn't DM the user. Oh well.")
         self.modcol.insert_one(txtmutelisting)
@@ -517,7 +517,7 @@ class Moderation(commands.Cog):
         )
         await ctx.send(embed=mute)
         try:
-            await user.send(embed=kick)
+            await user.send(embed=mute)
         except:
             await ctx.send("Couldn't DM the user. Oh well.")
         self.modcol.insert_one(txtmutelisting)
@@ -537,7 +537,7 @@ class Moderation(commands.Cog):
         )
         await ctx.send(embed=unmute)
         try:
-            await user.send(embed=kick)
+            await user.send(embed=unmute)
         except:
             await ctx.send("Couldn't DM the user. Oh well.")
 
