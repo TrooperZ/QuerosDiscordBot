@@ -297,7 +297,6 @@ class Moderation(commands.Cog):
             )
 
             role = discord.utils.get(ctx.guild.roles, name="Voice Muted")
-            await role.edit(position=1)
             await user.add_roles(role)
 
             overwrites = {
@@ -367,7 +366,6 @@ class Moderation(commands.Cog):
             )
 
             role = discord.utils.get(ctx.guild.roles, name="Voice Muted")
-            await role.edit(position=1)
             await user.add_roles(role)
 
             overwrites = {
@@ -438,7 +436,6 @@ class Moderation(commands.Cog):
             await ctx.guild.create_role(name="Muted", permissions=perms, color=Rcolor)
 
             role = discord.utils.get(ctx.guild.roles, name="Muted")
-            await role.edit(position=1)
             await user.add_roles(role)
 
             for channel in ctx.guild.channels:
@@ -489,7 +486,6 @@ class Moderation(commands.Cog):
             await ctx.guild.create_role(name="Muted", permissions=perms, color=Rcolor)
 
             role = discord.utils.get(ctx.guild.roles, name="Muted")
-            await role.edit(position=1)
             await user.add_roles(role)
 
             overwrites = {
