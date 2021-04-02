@@ -151,7 +151,10 @@ class Moderation(commands.Cog):
         )
 
         await ctx.channel.send(embed=kick)
-        await user.send(embed=kick)
+        try:
+            await user.send(embed=kick)
+        except:
+            await ctx.send("Couldn't DM the user. Oh well.")
 
         await user.kick(reason=reason)
 
@@ -190,7 +193,10 @@ class Moderation(commands.Cog):
         )
 
         await ctx.channel.send(embed=ban)
-        await user.send(embed=ban)
+        try:
+            await user.send(embed=kick)
+        except:
+            await ctx.send("Couldn't DM the user. Oh well.")
 
         await user.ban(reason=reason)
 
@@ -220,7 +226,11 @@ class Moderation(commands.Cog):
         )
 
         await ctx.channel.send(embed=ban)
-        await user.send(embed=ban)
+        try:
+            await user.send(embed=kick)
+        except:
+            await ctx.send("Couldn't DM the user. Oh well.")
+            
 
         await user.ban(reason=reason)
 
@@ -241,9 +251,10 @@ class Moderation(commands.Cog):
 
         await ctx.channel.send(embed=unban)
         try:
-            await user.send(embed=unban)
+            await user.send(embed=kick)
         except:
-            return
+            await ctx.send("Couldn't DM the user. Oh well.")
+            
 
     @commands.command(aliases=["purge", "del", "delete"])
     @commands.has_permissions(manage_messages=True)
@@ -310,22 +321,20 @@ class Moderation(commands.Cog):
             "status": "open",
             "punisher": ctx.author.id,
         }
+        vcmute = discord.Embed(
+            title=f":mute: Temporarily Voice Muted {user.name}!\nGuild: {ctx.guild.name}",
+            description=f"**Reason:** {reason}\n**By:** {str(ctx.author)}\n**Duration:** {display_time(duration)}",
+            color=0xB53737,
+        )
+
+        await ctx.channel.send(embed=vcmute)
         try:
-            await user.edit(mute=True)
-            vcmute = discord.Embed(
-                title=f":mute: Temporarily Voice Muted {user.name}!\nGuild: {ctx.guild.name}",
-                description=f"**Reason:** {reason}\n**By:** {str(ctx.author)}\n**Duration:** {display_time(duration)}",
-                color=0xB53737,
-            )
-
-            await ctx.channel.send(embed=vcmute)
-            await user.send(embed=vcmute)
-
-            self.modcol.insert_one(vcmutelisting)
-
+            await user.send(embed=kick)
         except:
-            await ctx.send("User is not connected to voice.")
-            return
+            await ctx.send("Couldn't DM the user. Oh well.")
+
+        self.modcol.insert_one(vcmutelisting)
+
 
     @commands.command()
     @commands.has_guild_permissions(mute_members=True)
@@ -377,7 +386,10 @@ class Moderation(commands.Cog):
         )
 
         await ctx.channel.send(embed=vcmute)
-        await user.send(embed=vcmute)
+        try:
+            await user.send(embed=kick)
+        except:
+            await ctx.send("Couldn't DM the user. Oh well.")
 
         self.modcol.insert_one(vcmutelisting)
 
@@ -395,7 +407,10 @@ class Moderation(commands.Cog):
             color=0xD6DAEB,
         )
         await ctx.send(embed=unmute)
-        await user.send(embed=unmute)
+        try:
+            await user.send(embed=kick)
+        except:
+            await ctx.send("Couldn't DM the user. Oh well.")
 
 
     @commands.command()
@@ -404,9 +419,7 @@ class Moderation(commands.Cog):
         """Kicks a user in voice channel. (Needs Move Members permissions)"""
         await user.edit(voice_channel=None)
 
-    @commands.command(
-        aliases=["temptxtmute", "softtxtmute", "softtextmute", "temptextmute"]
-    )
+    @commands.command(aliases=["temptxtmute", "softtxtmute", "softtextmute", "temptextmute"])
     @commands.has_permissions(manage_roles=True)
     async def mute(
         self, ctx, user: discord.Member, duration: TimeConverter, *, reason="No reason"):
@@ -450,7 +463,10 @@ class Moderation(commands.Cog):
             color=0xB53737,
         )
         await ctx.send(embed=mute)
-        await user.send(embed=mute)
+        try:
+            await user.send(embed=kick)
+        except:
+            await ctx.send("Couldn't DM the user. Oh well.")
         self.modcol.insert_one(txtmutelisting)
 
     @commands.command(
@@ -500,7 +516,10 @@ class Moderation(commands.Cog):
             color=0xB53737,
         )
         await ctx.send(embed=mute)
-        await user.send(embed=mute)
+        try:
+            await user.send(embed=kick)
+        except:
+            await ctx.send("Couldn't DM the user. Oh well.")
         self.modcol.insert_one(txtmutelisting)
 
     @commands.command(aliase=["untxtmute"])
@@ -517,7 +536,10 @@ class Moderation(commands.Cog):
             color=0xD6DAEB,
         )
         await ctx.send(embed=unmute)
-        await user.send(embed=unmute)
+        try:
+            await user.send(embed=kick)
+        except:
+            await ctx.send("Couldn't DM the user. Oh well.")
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
@@ -532,12 +554,12 @@ class Moderation(commands.Cog):
             + str(ctx.author)
             + "**"
         )
-        await user.send(
-            "You have been warned for: **"
-            + warning
-            + "** in the server: "
-            + str(ctx.guild.name)
-        )
+        try:
+            await user.send(f"You have been warned for: **{warning}** in the server: {ctx.guild.name}")
+        except:
+            await ctx.send("Couldn't DM the user. Oh well.")
+        
+        
         strDur = "N/A"
 
         warnlist = {
