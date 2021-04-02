@@ -84,6 +84,9 @@ async def on_command_error(ctx, error):
         await ctx.send("You are missing arguments in your command, check u.help [command] for the arguments.")
         return
 
+    if isisinstance(error, discord.Forbidden):
+        await ctx.send("Queros does not have the proper permissions. Try giving Queros role or the other roles that Queros has the proper permissions, or moving Queros up the role list.")
+
     print(error)
 
 

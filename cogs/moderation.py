@@ -458,7 +458,7 @@ class Moderation(commands.Cog):
     )
     @commands.has_permissions(manage_roles=True)
     async def hardmute(self, ctx, user: discord.Member, *, reason="No reason"):
-        """Temp mutes a user in text channels. (Needs Manage Roles permissions)"""
+        """Perm mutes a user in text channels. (Needs Manage Roles permissions)"""
 
         if discord.utils.get(ctx.guild.roles, name="Muted"):
             role = discord.utils.get(ctx.guild.roles, name="Muted")
@@ -470,19 +470,14 @@ class Moderation(commands.Cog):
 
         else:
             perms = discord.Permissions(send_messages=False, read_messages=True)
-            await ctx.guild.create_role(
-                name="Muted", permissions=perms, color=Rcolor
-            )
+            await ctx.guild.create_role(name="Muted", permissions=perms, color=Rcolor)
 
             role = discord.utils.get(ctx.guild.roles, name="Muted")
             await role.edit(position=1)
             await user.add_roles(role)
 
             overwrites = {
-                Muted: discord.PermissionOverwrite(
-                    read_messages=True,
-                    send_messages=False,
-                )
+                Muted: discord.PermissionOverwrite(read_messages=True, send_messages=False,)
             }
 
             for channel in ctx.guild.channels:
