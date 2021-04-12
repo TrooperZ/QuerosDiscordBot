@@ -58,7 +58,6 @@ class BotInfo(commands.Cog):
         embed.add_field(name="Total Users", value=str(len(set(self.bot.users))), inline=True)
         embed.add_field(name="Total Servers", value=str(len(self.bot.guilds)), inline=True)
         embed.add_field(name="Language Used", value="Python, using discord.py", inline=True)
-        embed.add_field(name="Version", value="v1.1", inline=True)
         embed.add_field(name="CPU", value=f"{psutil.cpu_percent(percpu=False)} %", inline=True)
         embed.add_field(name="Memory", value=f"{round(memory.used/1024**2)} MiB used, {round(memory.total/1024**2)} MiB total.",inline=True,)
         await ctx.send(embed=embed)
