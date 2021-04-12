@@ -126,7 +126,7 @@ class songdata(commands.Cog):  # song data retrevial part
     ):  # gets the song and returns an embed + adds it to queue
         url_rx = re.compile(r"https?://(?:www\.)?.+")  # just a filtering thing
 
-        if url_rx.match(query) and "playlist" in query:  # checks for playlist
+        if url_rx.match(query) and "list" in query:  # checks for playlist
             playlist = await self.bot.wavelink.get_tracks(query)  # gets the playlist
 
             # embed for playlist
