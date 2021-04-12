@@ -487,11 +487,8 @@ class Music(commands.Cog):
                 await player.destroy()
                 queue.clear()
                 await ctx.send(":door: Leaving the voice channel...")
-                queue.clear()
                 return
-            await ctx.send(
-                ":x: The bot is in use right now. Please have a DJ or someone with permissions kick the bot."
-            )
+            await ctx.send(":x: The bot is in use right now. Please have a DJ or someone with permissions kick the bot.")
             return
         else:
             queue.clear()

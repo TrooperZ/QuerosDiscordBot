@@ -63,7 +63,7 @@ class Utillity(commands.Cog):
     
     @commands.command()
     @commands.cooldown(rate=1, per=2.0, type=commands.BucketType.user)
-    async def stonks(self, ctx, stock: str, time="1d"):
+    async def stocks(self, ctx, stock: str, time="1d"):
         """Grabs stock info for a ticker of your choice.
         Choose from 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, and max"""
         try:

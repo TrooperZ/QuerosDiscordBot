@@ -200,103 +200,103 @@ class Fun(commands.Cog):
 
         await ctx.send(random.choice(kill_choices))
 
-    @commands.command()
-    @commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
-    async def redditgrab(self, ctx, subreddit: str, spoiler="no"):
-        """Grabs a post from reddit subreddit, add tag spoiler to add a spoiler."""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if "redditgrab" in cmdsList:
-            return
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
+    #@commands.command()
+    #@commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
+    #async def redditgrab(self, ctx, subreddit: str, spoiler="no"):
+    #    """Grabs a post from reddit subreddit, add tag spoiler to add a spoiler."""
+    #    cmds = self.configcol.find(
+    #        {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
+    #    )
+    #    cmdsList = ["0"]
+    #    for i in cmds:
+    #        cmdOff = i["commands"]
+    #        cmdsList.extend(cmdOff)
+    #    if "redditgrab" in cmdsList:
+    #        return
+    #    channelList = ["0"]
+    #    channels = self.configcol.find(
+    #        {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
+    #    )
 
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
+    #    for i in channels:
+    #        channeloff = i["channels"]
+    #        channelList.extend(channeloff)
 
-        if ctx.message.channel.id in channelList:
-            return
-        await ctx.channel.trigger_typing()
-        try:
-            subredditGrabbed = await reddit.subreddit(subreddit)
-        except Exception as e:
-            await ctx.send("Hmm, there was an issue getting that subreddit. Make sure to type the subreddit without the r/.")
-            print(e)
-        Listposts = []
-        randomPost = random.randint(1, 120)
-        async for post in subredditGrabbed.hot(limit=60):
-            Listposts.append(post)
-        post = Listposts[randomPost]
+    #    if ctx.message.channel.id in channelList:
+    #        return
+    #    await ctx.channel.trigger_typing()
+    #    try:
+    #        subredditGrabbed = await reddit.subreddit(subreddit)
+    #    except Exception as e:
+    #        await ctx.send("Hmm, there was an issue getting that subreddit. Make sure to type the subreddit without the r/.")
+    #        print(e)
+    #    Listposts = []
+    #    randomPost = random.randint(1, 120)
+    #    async for post in subredditGrabbed.hot(limit=60):
+    #        Listposts.append(post)
+    #    post = Listposts[randomPost]
 
-        if post.over_18:
-            if ctx.channel.is_nsfw():
-                if spoiler == "spoiler":
-                    imgId = random.randint(1,10000)
-                    async with aiohttp.ClientSession() as session:
-                        async with session.get(post.url) as resp:
-                            if resp.status == 200:
-                                f = await aiofiles.open(f'SPOILER_imageNSFW{imgId}.jpg', mode='wb')
-                                await f.write(await resp.read())
-                                await f.close()
-                    with open(f'SPOILER_imageNSFW{imgId}.jpg', 'rb') as f:
-                            picture = discord.File(f)
-                            await ctx.send(file=picture)
+    #    if post.over_18:
+    #        if ctx.channel.is_nsfw():
+    #            if spoiler == "spoiler":
+    #                imgId = random.randint(1,10000)
+    #                async with aiohttp.ClientSession() as session:
+    #                    async with session.get(post.url) as resp:
+    #                        if resp.status == 200:
+    #                            f = await aiofiles.open(f'SPOILER_imageNSFW{imgId}.jpg', mode='wb')
+    #                            await f.write(await resp.read())
+    #                            await f.close()
+    #                with open(f'SPOILER_imageNSFW{imgId}.jpg', 'rb') as f:
+    #                        picture = discord.File(f)
+    #                        await ctx.send(file=picture)
 
-                embed = discord.Embed(
-                    title=post.title,
-                    description="Posted by: " + str(post.author),
-                    url="https://www.reddit.com" + post.permalink,
-                    color=0xFF4000,
-                )
-                embed.set_author(name="Post from r/" + subreddit)
-                if post.is_self:
-                    embed.add_field(name="** **", value=str(post.selftext))
-                else:
-                    embed.set_image(url=post.url)
-                embed.set_footer(text="Upvotes: " + str(post.score))
-                await ctx.send(embed=embed)
+    #            embed = discord.Embed(
+    #                title=post.title,
+    #                description="Posted by: " + str(post.author),
+    #                url="https://www.reddit.com" + post.permalink,
+    #                color=0xFF4000,
+    #            )
+    #            embed.set_author(name=f"Post from r/{subreddit}")
+    #            if post.is_self:
+    #                embed.add_field(name="** **", value=post.selftext)
+    #            else:
+    #                embed.set_image(url=post.url)
+    #            embed.set_footer(text=f"Upvotes: {post.score}")
+    #            await ctx.send(embed=embed)
 
-            else:
-                await ctx.send("Content is NSFW, this channel is not NSFW, content will not be loaded.")
+    #        else:
+    #            await ctx.send("Content is NSFW, this channel is not NSFW, content will not be loaded.")
 
-        if post.over_18 == False:
-            if spoiler == "spoiler":
-                imgId = random.randint(1,10000)
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(post.url) as resp:
-                        if resp.status == 200:
-                            f = await aiofiles.open(f'SPOILER_image{imgId}.jpg', mode='wb')
-                            await f.write(await resp.read())
-                            await f.close()
-                with open(f'SPOILER_image{imgId}.jpg', 'rb') as f:
-                        picture = discord.File(f)
-                        await ctx.send(file=picture)
-                return
-            embed = discord.Embed(
-                title=post.title,
-                description="Posted by: " + str(post.author),
-                url="https://www.reddit.com" + post.permalink,
-                color=0xFF4000,
-            )
-            embed.set_author(name="Post from r/" + subreddit)
-            if post.is_self:
-                embed.add_field(name="** **", value=str(post.selftext))
-            else:
-                embed.set_image(url=post.url)
-            embed.set_footer(text="Upvotes: " + str(post.score))
-            await ctx.send(embed=embed)
+    #    if post.over_18 == False:
+    #        if spoiler == "spoiler":
+    #            imgId = random.randint(1,10000)
+    #            async with aiohttp.ClientSession() as session:
+    #                async with session.get(post.url) as resp:
+    #                    if resp.status == 200:
+    #                        f = await aiofiles.open(f'SPOILER_image{imgId}.jpg', mode='wb')
+    #                        await f.write(await resp.read())
+    #                        await f.close()
+    #            with open(f'SPOILER_image{imgId}.jpg', 'rb') as f:
+    #                    picture = discord.File(f)
+    #                    await ctx.send(file=picture)
+    #            return
+    #        embed = discord.Embed(
+    #            title=post.title,
+    #            description="Posted by: " + str(post.author),
+    #            url="https://www.reddit.com" + post.permalink,
+    #            color=0xFF4000,
+    #        )
+    #        embed.set_author(name=f"Post from r/{subreddit}")
+    #        if post.is_self:
+    #            embed.add_field(name="** **", value=post.selftext)
+    #        else:
+    #            embed.set_image(url=post.url)
+    #        embed.set_footer(text=f"Upvotes: {post.score}")
+    #        await ctx.send(embed=embed)
 
     @commands.command(aliases=["8ball"])
     @commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
-    async def eightB(self, ctx: commands.Context, *, query: str):
+    async def eightb(self, ctx: commands.Context, *, query: str):
         """Eight Ball shall tell your future"""
         cmds = self.configcol.find(
             {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
@@ -307,7 +307,7 @@ class Fun(commands.Cog):
             cmdsList.extend(cmdOff)
         if "8ball" in cmdsList:
             return
-        elif "eightB" in cmdsList:
+        elif "eightb" in cmdsList:
             return
         channelList = ["0"]
         channels = self.configcol.find(
@@ -321,9 +321,7 @@ class Fun(commands.Cog):
         if ctx.message.channel.id in channelList:
             return
         if query.endswith("?") != True:
-            await ctx.send(
-                "Ya gotta ask me a yes or no question that ends with a question mark bro"
-            )
+            await ctx.send("Ask me a yes or no question that ends with a question mark.")
             return
 
         valuE = 0
