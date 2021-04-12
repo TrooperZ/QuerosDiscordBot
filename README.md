@@ -2,6 +2,8 @@
 
 Add the bot [here](https://discord.com/oauth2/authorize?client_id=760856635425554492&permissions=2146954871&scope=bot)
 
+Visit the website [here](https://queros.live/)
+
 ## What is Queros?
 Queros (pronounced like kue-ros) is a Discord bot written in Python designed with moderation features, utillity, music, and other fun commands! 
 
