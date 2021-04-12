@@ -482,7 +482,6 @@ class Music(commands.Cog):
                 "dj" in [y.name.lower() for y in ctx.author.roles]
                 or ctx.author.guild_permissions.manage_channels
             ):
-                queue.clear()
                 await player.stop()
                 await player.destroy()
                 queue.clear()
@@ -491,12 +490,10 @@ class Music(commands.Cog):
             await ctx.send(":x: The bot is in use right now. Please have a DJ or someone with permissions kick the bot.")
             return
         else:
-            queue.clear()
             await player.stop()
             await player.destroy()
             queue.clear()
             await ctx.send(":door: Leaving the voice channel...")
-            queue.clear()
             return
 
     @commands.command(
@@ -819,8 +816,8 @@ class Music(commands.Cog):
             return
 
         try:
-            song = queue.getSongData(pos)
-            queue.remove(pos)
+            song = queue.getSongData(pos - 1)
+            queue.remove(pos - 1)
 
             await ctx.send(f":wastebasket: Removed: `{song.title}` from the queue.")
 
