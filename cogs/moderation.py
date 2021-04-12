@@ -580,7 +580,7 @@ class Moderation(commands.Cog):
             {"$and": [{"userid": user.id}, {"guildid": ctx.message.guild.id}]}
         )
         embed = discord.Embed(
-            title="History of " + str(user.name) + " in: " + str(ctx.author.guild.name),
+            title=f"History of {user.name}  in: {ctx.author.guild.name}",
             color=0xE1FF00,
         )
 
@@ -589,32 +589,12 @@ class Moderation(commands.Cog):
         for x in history:
             itemsCount += 1
             try:
-                embed.add_field(
-                    name="**" + str(x["infraction"]) + "** `" + str(x["_id"]) + "`",
-                    value="Reason: **"
-                    + str(x["reason"])
-                    + "**\nTime: **"
-                    + str(x["time"])
-                    + "**\nPunisher: **"
-                    + str(x["punisher"])
-                    + "**\nDuration: **"
-                    + str(x["duration"])
-                    + "**",
-                    inline=False,
-                )
+                embed.add_field(name=f"** {x['infraction']} ** ` {x['_id']} `",
+                    value=f"Reason: ** {x['reason']} **\nTime: ** {x['time']} **\nPunisher: ** {x['punisher']} **\nDuration: ** {x['duration']} **",inline=False,)
 
             except:
-                embed.add_field(
-                    name="**" + str(x["infraction"]) + "** `" + str(x["_id"]) + "`",
-                    value="Reason: **"
-                    + str(x["reason"])
-                    + "**\nTime: **"
-                    + str(x["time"])
-                    + "**\nPunisher: **"
-                    + str(x["punisher"])
-                    + "**",
-                    inline=False,
-                )
+                embed.add_field(name=f"** {x['infraction']} ** `{x['_id']} `",
+                    value=f"Reason: ** {x['reason']} **\nTime: ** {x['time']} **\nPunisher: ** {x['punisher']}**", inline=False,)
 
             if itemsCount >= items:
                 break
