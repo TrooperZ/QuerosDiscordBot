@@ -138,7 +138,7 @@ class songdata(commands.Cog):  # song data retrevial part
             embed.add_field(name="Requested By:", value=f"e{requester.mention}")
             embed.set_author(name=requester.name, icon_url=requester.avatar_url)
 
-            for track in  list.tracks:  # adds each track to list
+            for track in playlist.tracks:  # adds each track to list
                 queue = await self.bot.QueueSystem.get_queue(guild_id)
                 if type == "top":
                     queue.addtop(track, requester)
@@ -644,10 +644,15 @@ class Music(commands.Cog):
             await ctx.invoke(self.bot.get_command("join"))
 
         if len(queue.data()) > 0:
-            await ctx.send(embed=await self.bot.get_cog("songdata").songdata(
-                    query, ctx.guild.id, ctx.author, "play"))
+            await ctx.send(
+                embed=await self.bot.get_cog("songdata").songdata(
+                    query, ctx.guild.id, ctx.author, "play"
+                )
+            )
         else:
-            await self.bot.get_cog("songdata").songdata(query, ctx.guild.id, ctx.author, "play")
+            await self.bot.get_cog("songdata").songdata(
+                query, ctx.guild.id, ctx.author, "play"
+            )
 
         while True:
             try:
