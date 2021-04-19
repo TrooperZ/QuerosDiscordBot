@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord.ext import tasks
 
+
 class Dev(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -55,6 +56,7 @@ class Dev(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         await self.statusLoop.start()
+
 
 def setup(bot):
     bot.add_cog(Dev(bot))

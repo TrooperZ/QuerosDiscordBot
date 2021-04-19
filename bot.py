@@ -38,7 +38,7 @@ def display_time(seconds, granularity=2):
     return ", ".join(result[:granularity])
 
 
-bot = commands.Bot(command_prefix="u.", intents=discord.Intents.all(), help_command=PrettyHelp())
+bot = commands.Bot(command_prefix="ud.", intents=discord.Intents.all(), help_command=PrettyHelp())
 
 bot.help_command = PrettyHelp(color=0x6BD5FF, active=60, verify_checks=False)
 bot.wavelink = wavelink.Client(bot=bot)

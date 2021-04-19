@@ -160,7 +160,7 @@ class Fun(commands.Cog):
         imgURL = None
         for attachment in msg.attachments:
             imgURL = attachment.proxy_url
-        if imgURL != None:
+        if imgURL is not None:
             embed.set_image(url=imgURL)
         await ctx.send(embed=embed)
 
@@ -200,9 +200,9 @@ class Fun(commands.Cog):
 
         await ctx.send(random.choice(kill_choices))
 
-    #@commands.command()
-    #@commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
-    #async def redditgrab(self, ctx, subreddit: str, spoiler="no"):
+    # @commands.command()
+    # @commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
+    # async def redditgrab(self, ctx, subreddit: str, spoiler="no"):
     #    """Grabs a post from reddit subreddit, add tag spoiler to add a spoiler."""
     #    cmds = self.configcol.find(
     #        {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}

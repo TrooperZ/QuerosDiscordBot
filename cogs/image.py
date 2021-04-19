@@ -45,7 +45,7 @@ class Image(commands.Cog):
         if ctx.message.channel.id in channelList:
             return
 
-        if user == None:
+        if user is None:
             for attachment in ctx.message.attachments:
                 img = await self.bot.dagpi.image_process(
                     asyncdagpi.ImageFeatures.pixel(), attachment.proxy_url
@@ -57,7 +57,7 @@ class Image(commands.Cog):
             userID = re.sub("[^0-9]", "", user)
             try:
                 user = await ctx.guild.fetch_member(userID)
-            except:
+            except BaseException:
                 await ctx.send("No user found.")
                 return
 
@@ -93,7 +93,7 @@ class Image(commands.Cog):
         if ctx.message.channel.id in channelList:
             return
 
-        if user == None:
+        if user is None:
             for attachment in ctx.message.attachments:
                 img = await self.bot.dagpi.image_process(
                     asyncdagpi.ImageFeatures.blur(), attachment.proxy_url
@@ -105,7 +105,7 @@ class Image(commands.Cog):
             userID = re.sub("[^0-9]", "", user)
             try:
                 user = await ctx.guild.fetch_member(userID)
-            except:
+            except BaseException:
                 await ctx.send("No user found.")
                 return
 
@@ -141,7 +141,7 @@ class Image(commands.Cog):
         if ctx.message.channel.id in channelList:
             return
 
-        if user == None:
+        if user is None:
             for attachment in ctx.message.attachments:
                 imageID = random.randint(0, 1000000000)
                 await attachment.save(f"image{imageID}.png")
@@ -157,7 +157,7 @@ class Image(commands.Cog):
             userID = re.sub("[^0-9]", "", user)
             try:
                 user = await ctx.guild.fetch_member(userID)
-            except:
+            except BaseException:
                 await ctx.send("No user found.")
                 return
 
@@ -171,7 +171,6 @@ class Image(commands.Cog):
 
             pic = discord.File(f"imageDeepfried{imageID}.png")
             await ctx.send(file=pic)
-
 
     @commands.command()
     @commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
@@ -198,7 +197,7 @@ class Image(commands.Cog):
         if ctx.message.channel.id in channelList:
             return
 
-        if user == None:
+        if user is None:
             for attachment in ctx.message.attachments:
                 img = await self.bot.dagpi.image_process(
                     asyncdagpi.ImageFeatures.invert(), attachment.proxy_url
@@ -210,7 +209,7 @@ class Image(commands.Cog):
             userID = re.sub("[^0-9]", "", user)
             try:
                 user = await ctx.guild.fetch_member(userID)
-            except:
+            except BaseException:
                 await ctx.send("No user found.")
                 return
 
@@ -220,6 +219,7 @@ class Image(commands.Cog):
             )
             file = discord.File(fp=img.image, filename=f"invert.{img.format}")
             await ctx.send(file=file)
+
 
 def setup(bot):
     bot.add_cog(Image(bot))

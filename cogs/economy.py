@@ -77,13 +77,13 @@ class Economy(commands.Cog):
         if ctx.message.channel.id in channelList:
             return
 
-        if user == None:
+        if user is None:
             user = ctx.message.author
         else:
             userID = re.sub("[^0-9]", "", user)
             try:
                 user = await ctx.guild.fetch_member(userID)
-            except:
+            except BaseException:
                 await ctx.send("There's no user related to that entry")
                 return
 
@@ -622,6 +622,7 @@ class Economy(commands.Cog):
             return
 
         await ctx.send(f"Here you go, **{randomCoins}** have been added to ur wallet.")
+
 
 def setup(bot):
     bot.add_cog(Economy(bot))

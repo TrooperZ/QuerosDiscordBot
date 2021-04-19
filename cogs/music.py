@@ -1,929 +1,806 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-# music.py
+# This is the old music infrastructure I used. This will be there just in case the new one is broken.
 
-import asyncio
-import datetime
-import math
+
+import sys
 import os
-import random
-import re
-import time
-
 import discord
-import wavelink
-from discord.ext import commands, tasks
+from discord.ext import commands
+from discord.utils import get
+from discord import FFmpegPCMAudio
+import asyncio
+import itertools
+from async_timeout import timeout
+import youtube_dl
+import time
+import functools
+import datetime
+import pymongo
+import math
 from dotenv import load_dotenv
 
+load_dotenv()
 
-class QueueSystem(commands.Cog):
-    def __init__(self, bot):
-        self.guildtracker = {}
-        self.channeltracker = {}
-        self.bot = bot
-
-    async def newqueue(self, guild_id):
-        queue = Queue()
-        self.guildtracker[guild_id] = queue
-        return
-
-    async def get_queue(self, guild_id):
-        return self.guildtracker[guild_id]
-
-    async def newchannel(self, guild_id, channel):
-        self.channeltracker[guild_id] = channel
-        return
-
-    async def get_channel(self, guild_id):
-        return self.channeltracker[guild_id]
+MONGO_PASS = os.getenv('MONGO_PASS')
+myclient = pymongo.MongoClient("mongodb+srv://queroscode:" + MONGO_PASS + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority")
+mydb = myclient["data"]
+configcol = mydb["configs"]
 
 
-class Queue:
-    def __init__(self):
-        self.queue = []
-        self.requestlist = []
-        self.skipsong = None
-        self.skipvoters = []
+class VoiceError(Exception):
+    pass
+
+
+class YTDLError(Exception):
+    pass
+
+
+class YTDLSource(discord.PCMVolumeTransformer):
+    YTDL_OPTIONS = {
+        'format': 'bestaudio/best',
+        'extractaudio': True,
+        'audioformat': 'mp3',
+        'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
+        'restrictfilenames': True,
+        'noplaylist': True,
+        'nocheckcertificate': True,
+        'ignoreerrors': False,
+        'logtostderr': False,
+        'quiet': True,
+        'no_warnings': True,
+        'default_search': 'auto',
+        'source_address': '0.0.0.0',
+    }
+
+    FFMPEG_OPTIONS = {
+        'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+        'options': '-vn',
+    }
+
+    ytdl = youtube_dl.YoutubeDL(YTDL_OPTIONS)
+
+    def __init__(self, ctx: commands.Context, source: discord.FFmpegPCMAudio, *, data: dict, volume: float = 0.5):
+        super().__init__(source, volume)
+
+        self.requester = ctx.author
+        self.channel = ctx.channel
+        self.data = data
+
+        self.uploader = data.get('uploader')
+        self.uploader_url = data.get('uploader_url')
+        date = data.get('upload_date')
+        self.upload_date = date[6:8] + '.' + date[4:6] + '.' + date[0:4]
+        self.title = data.get('title')
+        self.thumbnail = data.get('thumbnail')
+        self.description = data.get('description')
+        self.duration = self.parse_duration(int(data.get('duration')))
+        self.tags = data.get('tags')
+        self.url = data.get('webpage_url')
+        self.views = data.get('view_count')
+        self.likes = data.get('like_count')
+        self.dislikes = data.get('dislike_count')
+        self.stream_url = data.get('url')
+
+    def __str__(self):
+        return '**{0.title}** by **{0.uploader}**'.format(self)
+
+    @classmethod
+    async def create_source(cls, ctx: commands.Context, search: str, *, loop: asyncio.BaseEventLoop = None):
+        loop = loop or asyncio.get_event_loop()
+
+        partial = functools.partial(cls.ytdl.extract_info, search, download=False, process=False)
+        data = await loop.run_in_executor(None, partial)
+        print(data)
+        if 'entries' in data:
+            # take first item from a playlist
+            data = data['entries']
+            lisst = list(data)
+            print(lisst)
+            data = lisst[0]
+
+        if data is None:
+            raise YTDLError(f'Could not find anything that matches `{search}`')
+
+        if 'entries' not in data:
+            process_info = data
+        else:
+            process_info = None
+            for entry in data['entries']:
+                if entry:
+                    process_info = entry
+                    break
+
+            if process_info is None:
+                raise YTDLError(f'Could not find anything that matches `{search}`')
+        try:
+            webpage_url = process_info['webpage_url']
+        except KeyError:
+            webpage_url = process_info['url']
+            print(webpage_url)
+        partial = functools.partial(cls.ytdl.extract_info, webpage_url, download=False)
+        processed_info = await loop.run_in_executor(None, partial)
+
+        if processed_info is None:
+            raise YTDLError(f"Could not fetch `{webpage_url}`")
+
+        if 'entries' not in processed_info:
+            info = processed_info
+        else:
+            info = None
+            while info is None:
+                try:
+                    info = processed_info['entries'].pop(0)
+                except IndexError:
+                    raise YTDLError(f"Could not fetch `{webpage_url}`")
+
+        return cls(ctx, discord.FFmpegPCMAudio(info['url'], **cls.FFMPEG_OPTIONS), data=info)
+
+    @staticmethod
+    def parse_duration(duration: int):
+        if duration > 0:
+            value = str(datetime.timedelta(seconds=duration))
+
+        elif duration == 0:
+            value = "LIVE"
+
+        return value
+
+
+class Song:
+    __slots__ = ('source', 'requester')
+
+    def __init__(self, source: YTDLSource):
+        self.source = source
+        self.requester = source.requester
+
+    def create_embed(self):
+        embed = (discord.Embed(title=':musical_note: Now playing', description='```css\n{0.source.title}\n```'.format(self), color=discord.Color.blurple())
+                 .add_field(name='Duration', value=self.source.duration)
+                 .add_field(name='Requested by', value=self.requester.mention)
+                 .add_field(name='Uploader', value='[{0.source.uploader}]({0.source.uploader_url})'.format(self))
+                 .add_field(name='URL', value='[Click]({0.source.url})'.format(self))
+                 .set_thumbnail(url=self.source.thumbnail))
+        return embed
+
+
+class SongQueue(asyncio.Queue):
+    def __getitem__(self, item):
+        if isinstance(item, slice):
+            return list(itertools.islice(self._queue, item.start, item.stop, item.step))
+        else:
+            return self._queue[item]
+
+    def __iter__(self):
+        return self._queue.__iter__()
+
+    def __len__(self):
+        return self.qsize()
 
     def clear(self):
-        self.nowsong = self.queue[0]
-        self.nowreq = self.requestlist[0]
-        self.queue = [self.nowsong]
-        self.requestlist = [self.nowreq]
-        self.skipsong = None
-        self.skipvoters = []
-
-    def add(self, item, requ):
-        self.queue.append(item)
-        self.requestlist.append(requ)
-
-    def addtop(self, item, requ):
-        self.queue.insert(1, item)
-        self.requestlist.insert(1, requ)
-
-    def voteskip(self, user):
-        self.skipvoters.append(user)
-
-    def voteskiplen(self):
-        return len(self.skipvoters)
-
-    def skiplist(self):
-        return self.skipvoters
-
-    def skip(self, amount=1):
-        for x in range(amount):
-            self.queue.pop(0)
-            self.requestlist.pop(0)
-        self.skipsong = None
-        self.skipvoters = []
-
-    def remove(self, position=1):
-        self.queue.pop(position)
-        self.requestlist.pop(position)
-
-    def queueLen(self):
-        return int(len(self.queue))
-
-    def data(self):
-        return self.queue
-
-    def latest(self):
-        return self.queue[0]
-
-    def queueUser(self):
-        return self.requestlist
-
-    def latestQueueUser(self):
-        return self.requestlist[0]
-
-    def getSongData(self, position=0):
-        return self.queue[position]
-
-    def getSongReq(self, position=0):
-        return self.requestlist[position]
+        self._queue.clear()
 
     def shuffle(self):
-        firstQueue = self.queue[0]
-        firstRequest = self.requestlist[0]
+        random.shuffle(self._queue)
 
-        queuetail = self.queue[1:]
-        requesttail = self.requestlist[1:]
-
-        zipList = list(zip(queuetail, requesttail))
-        random.shuffle(zipList)
-
-        self.queue, self.requestlist = map(list, zip(*zipList))
-        self.queue.insert(0, firstQueue)
-        self.requestlist.insert(0, firstRequest)
+    def remove(self, index: int):
+        del self._queue[index]
 
 
-class songdata(commands.Cog):  # song data retrevial part
-    def __init__(self, bot):
+class VoiceState:
+    def __init__(self, bot: commands.Bot, ctx: commands.Context):
         self.bot = bot
+        self._ctx = ctx
 
-    async def songdata(
-        self, query, guild_id, requester, type: str
-    ):  # gets the song and returns an embed + adds it to queue
-        url_rx = re.compile(r"https?://(?:www\.)?.+")  # just a filtering thing
+        self.current = None
+        self.voice = None
+        self.next = asyncio.Event()
+        self.songs = SongQueue()
+        self.exists = True
 
-        if url_rx.match(query) and "list" in query:  # checks for playlist
-            playlist = await self.bot.wavelink.get_tracks(query)  # gets the playlist
+        self._loop = False
+        self._volume = 0.5
+        self.skip_votes = set()
+        self.stop_votes = set()
+        self.resume_votes = set()
+        self.pause_votes = set()
+        self.leave_votes = set()
+        self.shuffle_votes = set()
+        self.loop_votes = set()
+        self.remove_votes = set()
+        self.join_requester = ''
+        self.summon_requester = ''
 
-            # embed for playlist
-            embed = discord.Embed(
-                title=f":musical_note:  Playlist added",
-                description=f"Adding {len(playlist.tracks)} songs.",
-                color=0x6BD5FF,
-            )
-            embed.add_field(name="Requested By:", value=f"e{requester.mention}")
-            embed.set_author(name=requester.name, icon_url=requester.avatar_url)
+        self.audio_player = bot.loop.create_task(self.audio_player_task())
 
-            for track in playlist.tracks:  # adds each track to list
-                queue = await self.bot.QueueSystem.get_queue(guild_id)
-                if type == "top":
-                    queue.addtop(track, requester)
-                    asyncio.sleep(0.5)
-                    return embed
-                if type == "play":
-                    queue.add(track, requester)
-                    asyncio.sleep(0.5)
-                    return embed
+    def __del__(self):
+        self.audio_player.cancel()
 
-        elif url_rx.match(query):  # search via link
-            track = await self.bot.wavelink.get_tracks(query)  # searches the query
-            track = track[0]
+    @property
+    def loop(self):
+        return self._loop
 
-            if track.is_stream:  # checks for stream
-                durationTrack = "Live :red_circle:"
+    @loop.setter
+    def loop(self, value: bool):
+        self._loop = value
 
-            elif track.is_stream == False:  # formats the time
-                durationTrack = datetime.timedelta(milliseconds=track.length)
+    @property
+    def volume(self):
+        return self._volume
 
-            # embed generate
-            embed = discord.Embed(
-                title=":musical_note: Added Song to Queue",
-                url=track.uri,
-                description=f"`{track.title}`",
-                color=0x6BD5FF,
-            )
-            embed.add_field(
-                name="Requested By:", value=f"{requester.mention}", inline=True
-            )
-            embed.add_field(name="Duration", value=f"{durationTrack}", inline=True)
+    @volume.setter
+    def volume(self, value: float):
+        self._volume = value
 
-            queue = await self.bot.QueueSystem.get_queue(guild_id)
-            pos = len(queue.data())  # gets song position in queue
+    @property
+    def is_playing(self):
+        return self.voice and self.current
 
-            if type == "top":
-                queue.addtop(track, requester)
-                return embed
-            if type == "play":
-                if pos > 0:
-                    embed.add_field(name="Position", value=f"{pos}", inline=True)
-                queue.add(track, requester)
-                return embed
+    async def audio_player_task(self):
+        while True:
+            self.next.clear()
+            self.now = None
 
-        else:  # if it is not a link or playlist, search query, essentially the same as above
-            track = await self.bot.wavelink.get_tracks(f"ytsearch:{query}")
-            track = track[0]
+            if not self.loop:
+                # Try to get the next song within 3 minutes.
+                # If no song will be added to the queue in time,
+                # the player will disconnect due to performance
+                # reasons.
+                try:
+                    async with timeout(180):  # 3 minutes
+                        self.current = await self.songs.get()
+                except asyncio.TimeoutError:
+                    self.bot.loop.create_task(self.stop())
+                    self.exists = False
+                    return
 
-            if track.is_stream:
-                durationTrack = "Live :red_circle:"
+                self.current.source.volume = self._volume
+                if self.voice is None:
+                    return
+                self.voice.play(self.current.source, after=self.play_next_song)
+                await self.current.source.channel.send(embed=self.current.create_embed())
 
-            elif track.is_stream == False:
-                durationTrack = datetime.timedelta(milliseconds=track.length)
+            # If the song is looped
+            elif self.loop:
+                self.now = discord.FFmpegPCMAudio(self.current.source.stream_url, **YTDLSource.FFMPEG_OPTIONS)
+                self.voice.play(self.now, after=self.play_next_song)
 
-            embed = discord.Embed(
-                title=":musical_note: Added Song to Queue",
-                url=track.uri,
-                description=f"`{track.title}`",
-                color=0x6BD5FF,
-            )
-            embed.add_field(
-                name="Requested By:", value=f"{requester.mention}", inline=True
-            )
-            embed.add_field(name="Duration", value=f"{durationTrack}", inline=True)
+            await self.next.wait()
 
-            queue = await self.bot.QueueSystem.get_queue(guild_id)
-            pos = len(queue.data())
+    def play_next_song(self, error=None):
+        if error:
+            raise VoiceError(str(error))
 
-            if type == "top":
-                queue.addtop(track, requester)
-                return embed
-            if type == "play":
-                if pos > 0:
-                    embed.add_field(name="Position", value=f"{pos}", inline=True)
-                queue.add(track, requester)
-                return embed
+        self.next.set()
 
+    def skip(self):
+        self.skip_votes.clear()
 
-class dj_perm_error(commands.CheckFailure):
-    pass
+        if self.is_playing:
+            self.voice.stop()
 
+    async def stop(self):
+        self.stop_votes.clear()
+        self.songs.clear()
 
-class premiumServer_error(commands.CheckFailure):
-    pass
-
-
-class disabledCommand_error(commands.CheckFailure):
-    pass
+        if self.voice:
+            await self.voice.disconnect()
+            self.voice = None
 
 
 class Music(commands.Cog):
-    """Music related commands. Join a VC to use these."""
+    """Music related commands. A DJ role is required for admin commands."""
 
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.configcol = self.bot.mongodatabase["configs"]
-        self.premServercol = self.bot.mongodatabase["vipServers"]
+        self.voice_states = {}
 
-    async def cog_check(self, ctx):
-        player = self.bot.wavelink.get_player(ctx.guild.id)
-        channel = self.bot.get_channel(player.channel_id)
+    def get_voice_state(self, ctx: commands.Context):
+        state = self.voice_states.get(ctx.guild.id)
+        if not state or not state.exists:
+            state = VoiceState(self.bot, ctx)
+            self.voice_states[ctx.guild.id] = state
 
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
+        return state
 
+    def cog_unload(self):
+        for state in self.voice_states.values():
+            self.bot.loop.create_task(state.stop())
+
+    def cog_check(self, ctx: commands.Context):
+        if not ctx.guild:
+            raise commands.NoPrivateMessage('Music is disabled in DMs.')
+
+        return True
+
+    async def cog_before_invoke(self, ctx: commands.Context):
+        ctx.voice_state = self.get_voice_state(ctx)
+
+    async def cog_command_error(self, ctx: commands.Context, error: commands.CommandError):
+        await ctx.send(f'Error: {error}')
+
+    @commands.command(name='join', invoke_without_subcommand=True)
+    async def _join(self, ctx: commands.Context):
+        """Joins a voice channel of your choice."""
+        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+        cmdsList = ['0']
         for i in cmds:
-            cmdOff = i["commands"]
+            cmdOff = i['commands']
             cmdsList.extend(cmdOff)
+        if 'join' in cmdsList:
+            return
 
-        for i in cmdsList:
-            if ctx.invoked_with not in cmdsList:
-                pass
-
-            else:
-                raise disabledCommand_error()
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
+        channelList = ['0']
+        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
         for i in channels:
-            channeloff = i["channels"]
+            channeloff = i['channels']
             channelList.extend(channeloff)
 
-        if ctx.message.channel.id not in channelList:
-            pass
-        else:
-            raise disabledCommand_error()
+        if ctx.message.channel.id in channelList:
+            return
 
-        categories = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "categoryoff"}]}
-        )
-        catList = ["0"]
+        self.join_requester = ctx.message.author
+        if ctx.voice_state.is_playing:
+            await ctx.send("Bot is being used, please have a DJ move it.")
+            return
+        if ctx.author.voice is None:
+            return
+        destination = ctx.author.voice.channel
+        if ctx.voice_state.voice:
+            await ctx.voice_state.voice.move_to(destination)
+            return
+        ctx.voice_state.voice = await destination.connect()
 
-        for i in categories:
-            catoff = i["categories"]
-            catList.extend(catoff)
+        await ctx.send(f"Joining **{ctx.author.voice.channel}**")
 
-        if "music" not in catList:
-            return True
-        else:
-            raise disabledCommand_error()
+    @commands.command(name='summon')
+    async def _summon(self, ctx: commands.Context, *, channel: discord.VoiceChannel = None):
+        """Summons and moves the bot to a voice channel. If no channel was specified, it joins your channel. DJ Command"""
+        if "dj" not in [y.name.lower() for y in ctx.author.roles]:
+            await ctx.send(":no_entry: Missing permissions.")
+            return
 
-        if ctx.author.voice == None:
-            await ctx.send("Join a VC, **NOW!**")
-        return
+        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+        cmdsList = ['0']
+        for i in cmds:
+            cmdOff = i['commands']
+            cmdsList.extend(cmdOff)
+        if 'summon' in cmdsList:
+            return
+
+        channelList = ['0']
+        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+
+        for i in channels:
+            channeloff = i['channels']
+            channelList.extend(channeloff)
+
+        if ctx.message.channel.id in channelList:
+            return
+        self.join_requester = ctx.message.author
+        if not channel and not ctx.author.voice:
+            await ctx.send('Join a VC.')
+
+        destination = channel or ctx.author.voice.channel
+        if ctx.voice_state.voice:
+            await ctx.voice_state.voice.move_to(destination)
+            return
 
         try:
-            members = channel.members - 1
-        except:
-            return True
+            ctx.voice_state.voice = await destination.connect()
+        except BaseException:
+            await ctx.send("Can't connect. Try checking that you're selecting the correct VC.")
 
-        AdminCmd = [
-            "summon",
-            "equalizer",
-            "clearqueue",
-            "volume",
-            "playskip",
-            "playtop",
-            "skipover",
-            "shuffle",
-            "stop",
-        ]
+    @commands.command(name='leave', aliases=['disconnect', 'quit'])
+    async def _leave(self, ctx: commands.Context):
+        """Clears the queue and leaves the voice channel."""
+        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+        cmdsList = ['0']
+        for i in cmds:
+            cmdOff = i['commands']
+            cmdsList.extend(cmdOff)
+        if 'leave' in cmdsList:
+            return
 
-        if (
-            "dj" in [y.name.lower() for y in ctx.author.roles]
-            or ctx.author.guild_permissions.manage_channels
-        ):
-            return True
-        elif members == 1:
-            return True
-        else:
-            if ctx.invoked_with in AdminCmd:
-                raise dj_perm_error()
-            else:
+        channelList = ['0']
+        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+
+        for i in channels:
+            channeloff = i['channels']
+            channelList.extend(channeloff)
+
+        if ctx.message.channel.id in channelList:
+            return
+
+        if not ctx.voice_state.voice:
+            return await ctx.send('Not connected to any voice channel.')
+
+        if ctx.voice_state.is_playing:
+            if "dj" in [y.name.lower() for y in ctx.author.roles] or ctx.author.guild_permissions.manage_channels:
+                await ctx.voice_state.stop()
+                del self.voice_states[ctx.guild.id]
                 return
 
-        premCmd = ['vol', 'volume', 'eq', 'equalizer']
-
-        server = self.premServercol.find({"server": ctx.guild.id})
-        status = "off"
-        if ctx.invoked_with in premCmd:
-            for x in server:
-                status = x["status"]
-
-            if status == "on":
-                return True
-
-            else:
-                raise premiumServer_error()
-
-    @tasks.loop(seconds=120)  # if bot is inactive for 2 minutes, it leaves
-    async def timeOutMusic(self):
-        for i in self.bot.guilds:
-            player = self.bot.wavelink.get_player(i.id)
-            queue = await self.bot.QueueSystem.get_queue(i.id)
-            channel = self.bot.get_channel(player.channel_id)
-            try:
-                if len(channel.members) == 1:
-                    queue.clear()
-                    await player.destroy()
-                    queue.clear()
-            except:
-                pass
-            await asyncio.sleep(5)
-
-    @timeOutMusic.before_loop  # basic loop handeling
-    async def before_timeOutMusic(self):
-        await self.bot.wait_until_ready()
-
-    @commands.Cog.listener()
-    async def on_ready(self):  # stuff to do when bot is ready
-        await self.bot.wait_until_ready()  # waits until ready
-
-        self.bot.QueueSystem = self.bot.get_cog("QueueSystem")  # sets up queue
-
-        for guild in self.bot.guilds:
-            await self.bot.QueueSystem.newqueue(guild.id)
-
-        await self.bot.wavelink.initiate_node(
-            host="127.0.0.1",
-            port=2333,
-            rest_uri="http://127.0.0.1:2333",
-            password="youshallnotpass",
-            identifier="TEST",
-            region="us_central",
-        )  # connects to wavelink
-        await self.timeOutMusic.start()  # starts timeout loop
-
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):  # error checking
-        if isinstance(error, premiumServer_error):  # premium server error
-            embed = embed = discord.Embed(
-                title="Command is for Qu+ Server Only",
-                description="This command is only for Qu+ Servers. Use u.premium to get a premium server/account.\nPlease subscribe and help the developer here. By subscribing to Qu+ services, you help the developer continue making the bot and pay for server fees.",
-                color=0x6BD5FF,
-            )
-            await ctx.send(embed=embed)
+            await ctx.send("Bot is being used. Please have someone with permissions force kick the bot.")
             return
 
-        if isinstance(error, dj_perm_error):  # permission error
-            await ctx.send(
-                ":x: You need either the Manage Channels permissions or a role named `DJ` to perform this action."
-            )
+        await ctx.voice_state.stop()
+        del self.voice_states[ctx.guild.id]
+        await ctx.send(":door: Left the voice channel.")
+
+    @commands.command(name='volume', aliases=['vol'])
+    @commands.cooldown(rate=1, per=2.5, type=commands.BucketType.user)
+    async def _volume(self, ctx: commands.Context, *, volume: int):
+        """Sets the volume of the player. DJ Command."""
+        if "dj" not in [y.name.lower() for y in ctx.author.roles]:
+            await ctx.send(":no_entry: Missing permissions.")
             return
 
-        if isinstance(error, disabledCommand_error):  # ignore disabled
+        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+        cmdsList = ['0']
+        for i in cmds:
+            cmdOff = i['commands']
+            cmdsList.extend(cmdOff)
+        if 'volume' in cmdsList:
             return
 
-    @commands.command(aliases=["connect"])
-    async def join(self, ctx):
-        """Join the users current voice channel. If the bot is in use, it will not join."""
-        player = self.bot.wavelink.get_player(ctx.guild.id)
+        channelList = ['0']
+        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
-        try:
-            channel = self.bot.get_channel(player.channel_id)
-            members = len(channel.members) - 1
+        for i in channels:
+            channeloff = i['channels']
+            channelList.extend(channeloff)
 
-        except AttributeError:
-            members = 0
-
-        if ctx.author.voice.channel.id != player.channel_id and members >= 1:
-            await ctx.send(
-                ":x: The bot is currently being used in another channel, wait until it leaves or it is alone.\nYou can get it to join it via u.summon if you have perms."
-            )
+        if ctx.message.channel.id in channelList:
             return
 
-        else:
-            player = self.bot.wavelink.get_player(ctx.guild.id)
-            await self.bot.QueueSystem.newchannel(
-                ctx.guild.id, ctx.author.voice.channel
-            )
-            await ctx.send(
-                f":signal_strength: Connecting to **{ctx.author.voice.channel}**..."
-            )
-            await player.connect(ctx.author.voice.channel.id)
+        if not ctx.voice_state.is_playing:
+            return await ctx.send('Not playing anything.')
 
-    @commands.command(aliases=["nowplaying", "np"])
-    async def now(self, ctx):
-        """Displays the current song that is playing"""
-        player = self.bot.wavelink.get_player(ctx.guild.id)
-        queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
+        ctx.voice_state.current.source.volume = volume / 100
+        await ctx.send(f'Volume set to {volume}%')
 
-        if player.is_playing == False:
-            await ctx.send("<:tumbleweed:794967194470973520> Nothing is playing...")
+    @commands.command(name='now', aliases=['current', 'playing'])
+    @commands.cooldown(rate=1, per=2.5, type=commands.BucketType.user)
+    async def _now(self, ctx: commands.Context):
+        """Displays the currently playing song."""
+        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+        cmdsList = ['0']
+        for i in cmds:
+            cmdOff = i['commands']
+            cmdsList.extend(cmdOff)
+        if 'now' in cmdsList:
+            return
 
-        song = queue.latest()
-        requester = queue.latestQueueUser()
+        channelList = ['0']
+        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
-        embed = discord.Embed(
-            title=":musical_note: Now Playing",
-            description=f"```{song.title}```",
-            color=0x6BD5FF,
-        )
-        embed.add_field(name="Requested By", value=requester.mention)
-        embed.add_field(name="Uploader", value=f"{song.author}")
-        embed.add_field(name="URL", value=f"[Open]({song.uri})")
+        for i in channels:
+            channeloff = i['channels']
+            channelList.extend(channeloff)
 
-        if song.is_stream:
-            durationTrack = "Live :red_circle:"
-            embed.add_field(name="Duration", value=durationTrack)
-
-        elif song.is_stream == False:
-            durationTrack = datetime.timedelta(milliseconds=song.length)
-            curPos = datetime.timedelta(milliseconds=player.position)
-            curPos = str(curPos).split(".")[0]
-            embed.add_field(name="Duration", value=f"{curPos} / {durationTrack}")
-
-        embed.set_thumbnail(url=song.thumb)
-
+        if ctx.message.channel.id in channelList:
+            return
+        embed = ctx.voice_state.current.create_embed()
         await ctx.send(embed=embed)
 
-    @commands.command()
-    async def summon(self, ctx, *, channel: discord.VoiceChannel = None):
-        """Moves the bot to another VC (need Manage Channels perms)"""
-        if not channel:
-            try:
-                channel = ctx.author.voice.channel
-
-            except AttributeError:
-                await ctx.send(":x: Invalid Voice Channel.")
-
-        player = self.bot.wavelink.get_player(ctx.guild.id)
-        await self.bot.QueueSystem.newchannel(ctx.guild.id, channel)
-
-        await ctx.send(f":signal_strength: Connecting to **{channel.name}**...")
-
-        await player.connect(channel.id)
-
-    @commands.command(aliases=["quit", "disconnect"])
-    async def leave(self, ctx):
-        """Leave the bots current voice channel."""
-        player = self.bot.wavelink.get_player(ctx.guild.id)
-        queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
-
-        if player.is_playing:
-            if (
-                "dj" in [y.name.lower() for y in ctx.author.roles]
-                or ctx.author.guild_permissions.manage_channels
-            ):
-                await player.stop()
-                await player.destroy()
-                queue.clear()
-                await ctx.send(":door: Leaving the voice channel...")
-                return
-            await ctx.send(":x: The bot is in use right now. Please have a DJ or someone with permissions kick the bot.")
-            return
-        else:
-            await player.stop()
-            await player.destroy()
-            queue.clear()
-            await ctx.send(":door: Leaving the voice channel...")
+    @commands.command(name='pause', aliases=['pa'])
+    async def _pause(self, ctx: commands.Context):
+        """Pauses the currently playing song."""
+        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+        cmdsList = ['0']
+        for i in cmds:
+            cmdOff = i['commands']
+            cmdsList.extend(cmdOff)
+        if 'pause' in cmdsList:
             return
 
-    @commands.command(
-        aliases=["eq", "equalizer"],
-        name="equalizer (<:silverstar11:794770265657442347> Qu+ Server)",
-    )
-    async def equalizer(self, ctx, type: str):
-        """Sets the equalizer for the player.
-        flat = Resets your EQ to Flat (resets it)
-        metal = Experimental Metal/Rock Equalizer. Expect clipping on Bassy songs.
-        piano = Piano Equalizer. Suitable for Piano tracks, or tacks with an emphasis on Female Vocals. Could also be used as a Bass Cutoff.
-        boost = This equalizer emphasizes Punchy Bass and Crisp Mid-High tones. Not suitable for tracks with Deep/Low Bass."""
+        channelList = ['0']
+        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
-        player = self.bot.wavelink.get_player(ctx.guild.id)
+        for i in channels:
+            channeloff = i['channels']
+            channelList.extend(channeloff)
 
-        if type == "flat":
-            await player.set_eq(wavelink.eqs.Equalizer.flat())
+        if ctx.message.channel.id in channelList:
+            return
+        ctx.voice_state.voice.pause()
+        await ctx.send(":pause_button:  Pausing your song.")
 
-        if type == "metal":
-            await player.set_eq(wavelink.eqs.Equalizer.metal())
-
-        if type == "piano":
-            await player.set_eq(wavelink.eqs.Equalizer.piano())
-
-        if type == "boost":
-            await player.set_eq(wavelink.eqs.Equalizer.boost())
-
-        await ctx.send(f":control_knobs: Setting EQ to **{type}**...")
-
-    @commands.command()
-    async def seek(self, ctx, *, seek):
-        """Seek the current song to hh:mm:ss."""
-
-        player = self.bot.wavelink.get_player(ctx.guild.id)
-        queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
-
-        if (
-            "dj" in [y.name.lower() for y in ctx.author.roles]
-            or ctx.author.guild_permissions.manage_channels
-        ):
-            pass
-
-        elif ctx.author == queue.latestQueueUser():
-            pass
-
-        else:
-            await ctx.send(
-                ":x: You need either the Manage Channels permissions or a role named `DJ` to perform this action."
-            )
+    @commands.command(name='resume')
+    async def _resume(self, ctx: commands.Context):
+        """Resumes a currently paused song."""
+        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+        cmdsList = ['0']
+        for i in cmds:
+            cmdOff = i['commands']
+            cmdsList.extend(cmdOff)
+        if 'resume' in cmdsList:
             return
 
-        if not player.current:
-            return await ctx.send(":mute: No music is playing.")
+        channelList = ['0']
+        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
-        splited = seek.split(":")
+        for i in channels:
+            channeloff = i['channels']
+            channelList.extend(channeloff)
 
-        if len(splited) == 3:
-            res = int(splited[0]) * 3600 + int(splited[1]) * 60 + int(splited[2])
+        if ctx.message.channel.id in channelList:
+            return
+        await ctx.send(":arrow_forward:  Resuming.")
+        ctx.voice_state.voice.resume()
 
-        elif len(splited) == 2:
-            res = int(splited[0]) * 60 + int(splited[1])
-
-        elif len(splited) == 1:
-            res = int(splited[0])
-
-        else:
-            return await ctx.send(":x: Invalid format. Use `hh:mm:ss`")
-
-        if res > player.current.duration / 1000:
-            return await ctx.send(":x: Seek cannot be longer than song duration.")
-
-        await player.seek(int(res) * 1000)
-        await ctx.send(
-            "Seeked to `{}` out of `{}`".format(
-                time.strftime("%H:%M:%S", time.gmtime(res)),
-                time.strftime("%H:%M:%S", time.gmtime(player.current.duration / 1000)),
-            )
-        )
-
-    @commands.command(aliases=["emptyqueue", "clearq", "emptyq"])
-    async def clearqueue(self, ctx):
-        """Clears the queue for the bot."""
-        try:
-            queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
-            queue.clear()
-
-            await ctx.send(":wastebasket: Emptied the queue.")
-
-        except Exception as e:
-            print(e)
-
-    # @commands.command()
-    # async def loop(self, ctx):
-    #    """Loops the queue one time once it ends."""
-    #    if ctx.author.voice == None:
-    #        await ctx.send("Join a VC, **NOW!**")
-    #        return
-    #    queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
-    #    data = queue.data()[:]
-    #    try:                                                                               #this is broken rn, i will fix this after release
-    #        for x in data:
-    #            queue.add(x)
-    #    except Exception as e:
-    #        print(e)
-    #        await ctx.send("Hmm, I got an error, try again.")
-    #        return
-    #    await ctx.send("Your queue will now loop 1 time.")
-
-    @commands.command(
-        aliases=["vol", "volume"],
-        name="volume (<:silverstar1:794770265657442347> Qu+ Server)",
-    )
-    async def volume(self, ctx, *, volume: int):
-        """Set the volume. Volume above 100 causes earrape."""
-
-        player = self.bot.wavelink.get_player(ctx.guild.id)
-
-        if volume > 100:
-            await ctx.send(
-                ":warning: ***WARNING: VOLUME ABOVE 100% CAUSES AUDIO QUALITY DROP!!!*** :warning:"
-            )
-            await asyncio.sleep(1)
-            await ctx.send(f":loud_sound: Volume set to **{volume}%**.")
-            await player.set_volume(volume)
+    @commands.command(name='skip', aliases=['next'])
+    async def _skip(self, ctx: commands.Context):
+        """Vote to skip a song. The requester can automatically skip."""
+        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+        cmdsList = ['0']
+        for i in cmds:
+            cmdOff = i['commands']
+            cmdsList.extend(cmdOff)
+        if 'skip' in cmdsList:
             return
 
-        elif volume <= 100 or volume >= 0:
-            if volume > 80:
-                await ctx.send(f":loud_sound: Volume set to **{volume}%**.")
-                await player.set_volume(volume)
-                return
+        channelList = ['0']
+        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
-            else:
-                await ctx.send(f":sound: Volume set to **{volume}%**.")
-                await player.set_volume(volume)
-                return
+        for i in channels:
+            channeloff = i['channels']
+            channelList.extend(channeloff)
 
-        elif volume < 0:
-            await ctx.send(":x: Invalid volume defined.")
+        if ctx.message.channel.id in channelList:
             return
-
-    @commands.command()
-    async def play(self, ctx, *, query):
-        """Play a song of your choice. Searching, playlists, and URLs are supported."""
-        player = self.bot.wavelink.get_player(ctx.guild.id)
-        queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
-        if not player.is_connected:
-            await ctx.invoke(self.bot.get_command("join"))
-
-        if len(queue.data()) > 0:
-            await ctx.send(
-                embed=await self.bot.get_cog("songdata").songdata(
-                    query, ctx.guild.id, ctx.author, "play"
-                )
-            )
-        else:
-            await self.bot.get_cog("songdata").songdata(
-                query, ctx.guild.id, ctx.author, "play"
-            )
-
-        while True:
-            try:
-                song = queue.latest()
-            except:
-                song = None
-
-            if song == None:
-                return
-
-            if player.is_playing:
-                pass
-
-            else:
-                await player.play(song)
-                cmd = self.bot.get_command("now")
-                await cmd(ctx)
-
-            elapsed = 0
-            try:
-                while queue.latest() == song:
-                    await asyncio.sleep(1)
-                    elapsed += 975
-
-                    if elapsed > song.length:
-                        queue.skip()
-            except:
-                pass
-
-
-    @commands.command()
-    async def playskip(self, ctx, *, query):
-        """Skips and plays a song of your choice. Searching, playlists, and URLs are supported."""
-        player = self.bot.wavelink.get_player(ctx.guild.id)
-
-        if not player.is_connected:
-            try:
-                await ctx.invoke(self.bot.get_command("join"))
-
-            except Exception as e:
-                print(e)
-                await ctx.send("Join a VC, **NOW!**")
-                return
-
-        queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
-        if queue.latest() == None:
-            await ctx.send("Please play some music first.")
-            return
-
-        await ctx.send(f":track_next: Skipping and playing requested song...")
-
-        await self.bot.get_cog("songdata").songdata_addtop(
-            query, ctx.guild.id, ctx.author, "top"
-        )
-        queue.skip(1)
-        await player.stop()
-
-    @commands.command()
-    async def playtop(self, ctx, *, query):
-        """Puts a song at the top of the queue. Searching, playlists, and URLs are supported."""
-        player = self.bot.wavelink.get_player(ctx.guild.id)
-
-        if not player.is_connected:
-            try:
-                await ctx.invoke(self.bot.get_command("join"))
-
-            except Exception as e:
-                print(e)
-                await ctx.send("Join a VC, **NOW!**")
-                return
-
-        queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
-
-        if queue.latest() == None:
-            await ctx.send("Please play some music first.")
-            return
-
-        await ctx.send(
-            embed=await self.bot.get_cog("songdata").songdata(
-                query, ctx.guild.id, ctx.author, "top"
-            )
-        )
-
-    @commands.command()
-    async def skip(self, ctx):
-        """Skip the currently playing song."""
-        queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
-        player = self.bot.wavelink.get_player(ctx.guild.id)
-        channel = self.bot.get_channel(player.channel_id)
-
+        channel = ctx.author.voice.channel
         members = channel.members
+        memids = []
+        for member in members:
+            memids.append(member.id)
+        memidLen = len(memids)
+        memLenF = (memidLen - 1) // 2
 
-        if ctx.author == queue.latestQueueUser():
-            queue.skip(1)
-            await ctx.send(f":track_next: Skipping song...")
-            await player.stop()
+        if not ctx.voice_state.is_playing:
+            return await ctx.send('Not playing right now.')
 
-        elif ctx.author != queue.latestQueueUser():
-            if (len(channel.members) - 1) // 1.5 == 1:
-                queue.skip(1)
-                await ctx.send(f":track_next: Skipping song...")
-                await player.stop()
+        voter = ctx.message.author
+        if voter == ctx.voice_state.current.requester:
+            await ctx.send(":fast_forward: Skipping...")
+            ctx.voice_state.skip()
 
-            if ctx.author in queue.skiplist():
-                await ctx.send("You already voted to skip this song.")
-                return
+        elif voter.id not in ctx.voice_state.skip_votes:
+            ctx.voice_state.skip_votes.add(voter.id)
+            total_votes = len(ctx.voice_state.skip_votes)
 
-            await ctx.send(
-                f"You have voted, **{queue.voteskiplen() + 1}/{int((len(channel.members) - 1) // 1.5)}** remaining"
-            )
-            queue.voteskip(ctx.author)
-
-            if queue.voteskiplen() >= (len(channel.members) - 1) // 1.5:
-                queue.skip(1)
-                await ctx.send(f":track_next: Skipping song...")
-                await player.stop()  # check this later with multiple people
-
-    @commands.command()
-    async def skipover(self, ctx, amt=1):
-        """Skip but overrides voting, use u.skipover amt to skip a number of songs."""
-        queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
-        player = self.bot.wavelink.get_player(ctx.guild.id)
-
-        song = queue.data()[1]
-        queue.skip(amt)
-
-        await ctx.send(f":track_next: Skipping **{amt}** song(s)...")
-
-        await player.stop()
-
-    @commands.command()
-    async def shuffle(self, ctx):
-        """Mixes up the songs in the queue"""
-
-        queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
-        player = self.bot.wavelink.get_player(ctx.guild.id)
-
-        queue.shuffle()
-
-        await ctx.send(":twisted_rightwards_arrows: Shuffling queue...")
-
-    @commands.command()
-    async def remove(self, ctx, pos: int):
-        """Removes a song from the specified position."""
-        queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
-        positionReq = queue.getSongReq(pos)
-
-        if (
-            "dj" in [y.name.lower() for y in ctx.author.roles]
-            or ctx.author.guild_permissions.manage_channels
-        ):
-            pass
-
-        elif positionReq == ctx.author:
-            pass
+            if total_votes >= memLenF:
+                await ctx.send(":fast_forward: Skipping...")
+                ctx.voice_state.skip()
+            else:
+                await ctx.send("Skip vote added, currently at **{total_votes} / {memLenF}**")
 
         else:
-            await ctx.send(
-                ":x: You need either the Manage Channels permissions or a role named `DJ` to perform this action."
-            )
+            await ctx.send('You have already voted to skip this song.')
+
+    @commands.command(name='queue')
+    async def _queue(self, ctx: commands.Context, *, page: int = 1):
+        """Shows the player's queue. Choose the pages by adding a number. Each page shows 10 items."""
+        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+        cmdsList = ['0']
+        for i in cmds:
+            cmdOff = i['commands']
+            cmdsList.extend(cmdOff)
+        if 'queue' in cmdsList:
             return
 
-        try:
-            song = queue.getSongData(pos - 1)
-            queue.remove(pos - 1)
+        channelList = ['0']
+        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
-            await ctx.send(f":wastebasket: Removed: `{song.title}` from the queue.")
+        for i in channels:
+            channeloff = i['channels']
+            channelList.extend(channeloff)
 
-        except IndexError:
-            await ctx.send(":x: Please specify a vaild position in the queue.")
+        if ctx.message.channel.id in channelList:
             return
 
-    @commands.command()
-    async def pause(self, ctx):
-        """Pause or resume the music player."""
-        queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
-
-        if (
-            "dj" in [y.name.lower() for y in ctx.author.roles]
-            or ctx.author.guild_permissions.manage_channels
-        ):
-            pass
-
-        elif ctx.author == queue.latestQueueUser():
-            pass
-
-        else:
-            await ctx.send(
-                ":x: You need either the Manage Channels permissions or a role named `DJ` to perform this action."
-            )
-            return
-
-        queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
-        player = self.bot.wavelink.get_player(ctx.guild.id)
-
-        if player.is_paused:
-            await player.set_pause(False)
-            await ctx.send(f":arrow_forward: Resuming current song.")
-
-        else:
-            await player.set_pause(True)
-            await ctx.send(f":pause_button: Pausing current song.")
-
-    @commands.command()
-    async def queue(self, ctx, page=1):
-        """Gets the queue of the songs."""
-        queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
-        embed = discord.Embed(
-            title=f":musical_note: {ctx.guild.name}'s queue",
-            description="** **",
-            color=0x6BD5FF,
-        )
-
-        if len(queue.data()) == 0:
-            return await ctx.send("<:tumbleweed:794967194470973520> Empty queue.")
+        if len(ctx.voice_state.songs) == 0:
+            return await ctx.send('Empty queue.')
 
         items_per_page = 10
-        pages = math.ceil(len(queue.data()) / items_per_page)
-
-        if page > pages:
-            await ctx.send(
-                f"There are only {pages}. Please select a value within those pages. "
-            )
-            return
+        pages = math.ceil(len(ctx.voice_state.songs) / items_per_page)
 
         start = (page - 1) * items_per_page
         end = start + items_per_page
 
-        embed = discord.Embed(
-            title=f"{ctx.guild.name}'s queue", description="** **", color=0x6BD5FF
-        )
+        queue = ''
+        for i, song in enumerate(ctx.voice_state.songs[start:end], start=start):
+            queue += '`{0}.` [**{1.source.title}**]({1.source.url})\n'.format(i + 1, song)
 
-        for songList in enumerate(queue.data()[start:end], start=start):
-            song = songList[1]
-            reqU = queue.getSongReq(songList[0])
-            positionNum = songList[0]
-
-            if song.is_stream:
-                durationTrack = "Live :red_circle:"
-
-            elif song.is_stream == False:
-                durationTrack = datetime.timedelta(milliseconds=int(song.length))
-
-            if positionNum == 0:
-                position = "Now Playing"
-
-            if positionNum > 0:
-                position = songList[0]
-
-            embed.add_field(
-                name=f"*{str(position)}* | {song.title}",
-                value=f"Length: {durationTrack}\nRequested By: {reqU.mention}",
-                inline=False,
-            )
-
-        embed.set_footer(text=f"Page {page}/{pages}")
+        embed = (discord.Embed(description='**{} tracks:**\n\n{}'.format(len(ctx.voice_state.songs), queue))
+                 .set_footer(text='Viewing page {}/{}'.format(page, pages)))
         await ctx.send(embed=embed)
 
-    @commands.command()
-    async def stop(self, ctx):
-        """Stops and clears the queue."""
-        queue = await self.bot.QueueSystem.get_queue(ctx.guild.id)
-        player = self.bot.wavelink.get_player(ctx.guild.id)
+    @commands.command(name='shuffle')
+    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
+    async def _shuffle(self, ctx: commands.Context):
+        """Shuffles the queue. DJ Command."""
+        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+        cmdsList = ['0']
+        for i in cmds:
+            cmdOff = i['commands']
+            cmdsList.extend(cmdOff)
+        if 'shuffle' in cmdsList:
+            return
 
-        queue.clear()
-        await player.stop()
+        channelList = ['0']
+        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
 
-        await ctx.send(":octagonal_sign: Stopped the music.")
+        for i in channels:
+            channeloff = i['channels']
+            channelList.extend(channeloff)
+
+        if ctx.message.channel.id in channelList:
+            return
+        ctx.voice_state.songs.shuffle()
+        await ctx.send("Shuffling songs...")
+
+    @commands.command(name='remove')
+    async def _remove(self, ctx: commands.Context, index: int):
+        """Removes a song from the queue at a given index. DJ Command."""
+        if "dj" not in [y.name.lower() for y in ctx.author.roles]:
+            await ctx.send(":no_entry: Missing permissions.")
+            return
+        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+        cmdsList = ['0']
+        for i in cmds:
+            cmdOff = i['commands']
+            cmdsList.extend(cmdOff)
+        if 'remove' in cmdsList:
+            return
+
+        channelList = ['0']
+        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+
+        for i in channels:
+            channeloff = i['channels']
+            channelList.extend(channeloff)
+
+        if ctx.message.channel.id in channelList:
+            return
+        ctx.voice_state.songs.remove(index - 1)
+        await ctx.send("Removing song from list.")
+
+    @commands.command(name='loop')
+    @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
+    async def _loop(self, ctx: commands.Context):
+        """Toggles looping of the current song. DJ Command."""
+        if "dj" not in [y.name.lower() for y in ctx.author.roles]:
+            await ctx.send(":no_entry: Missing permissions.")
+            return
+        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+        cmdsList = ['0']
+        for i in cmds:
+            cmdOff = i['commands']
+            cmdsList.extend(cmdOff)
+        if 'loop' in cmdsList:
+            return
+
+        channelList = ['0']
+        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+
+        for i in channels:
+            channeloff = i['channels']
+            channelList.extend(channeloff)
+
+        if ctx.message.channel.id in channelList:
+            return
+        ctx.voice_state.loop = not ctx.voice_state.loop
+        await ctx.send("Looping toggled.")
+
+    @commands.command(name='skipover')
+    async def _skipover(self, ctx: commands.Context):
+        """Skip command that overrides standard command. DJ Command."""
+        if "dj" not in [y.name.lower() for y in ctx.author.roles]:
+            await ctx.send(":no_entry: Missing permissions.")
+            return
+        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+        cmdsList = ['0']
+        for i in cmds:
+            cmdOff = i['commands']
+            cmdsList.extend(cmdOff)
+        if 'skipOVRR' in cmdsList:
+            return
+
+        channelList = ['0']
+        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+
+        for i in channels:
+            channeloff = i['channels']
+            channelList.extend(channeloff)
+
+        if ctx.message.channel.id in channelList:
+            return
+        await ctx.send(":fast_forward: Skipping with elevated permissions.")
+        ctx.voice_state.skip()
+
+    @commands.command(name='stop')
+    async def _stop(self, ctx: commands.Context):
+        """Stops all music and clears queue. DJ Command."""
+        if "dj" not in [y.name.lower() for y in ctx.author.roles]:
+            await ctx.send(":no_entry: Missing permissions.")
+            return
+
+        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+        cmdsList = ['0']
+        for i in cmds:
+            cmdOff = i['commands']
+            cmdsList.extend(cmdOff)
+        if 'stop' in cmdsList:
+            return
+
+        channelList = ['0']
+        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+
+        for i in channels:
+            channeloff = i['channels']
+            channelList.extend(channeloff)
+
+        if ctx.message.channel.id in channelList:
+            return
+        await ctx.send("Stopping with elevated permissions.")
+        ctx.voice_state.songs.clear()
+        ctx.voice_state.voice.stop()
+
+    @commands.command(name='play')
+    @commands.cooldown(rate=1, per=2.5, type=commands.BucketType.user)
+    async def _play(self, ctx: commands.Context, *, search: str):
+        """Plays a song by searching.
+        If there are songs in the queue, this will be queued until the
+        other songs finished playing.
+        This command automatically searches from various sites if no URL is provided.
+        A list of these sites can be found here: https://rg3.github.io/youtube-dl/supportedsites.html
+        """
+        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
+        cmdsList = ['0']
+        for i in cmds:
+            cmdOff = i['commands']
+            cmdsList.extend(cmdOff)
+        if 'play' in cmdsList:
+            return
+
+        channelList = ['0']
+        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
+
+        for i in channels:
+            channeloff = i['channels']
+            channelList.extend(channeloff)
+
+        if ctx.message.channel.id in channelList:
+            return
+
+        if not ctx.voice_state.voice:
+            await ctx.invoke(self._join)
+            await asyncio.sleep(3)
+
+        async with ctx.typing():
+            try:
+                source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop)
+            except YTDLError as e:
+                await ctx.send(f'Error: {e}')
+            else:
+                song = Song(source)
+
+                await ctx.voice_state.songs.put(song)
+                await ctx.send(f'Song added to queue: {source}')
+
+    @_join.before_invoke
+    @_play.before_invoke
+    async def ensure_voice_state(self, ctx: commands.Context):
+        if not ctx.author.voice or not ctx.author.voice.channel:
+            await ctx.send('Join a voice channel.')
+            return
+
+        if ctx.voice_client:
+            if ctx.voice_client.channel != ctx.author.voice.channel:
+                await ctx.send('Bot is already in use.')
+                return
 
 
 def setup(bot):
     bot.add_cog(Music(bot))
-    bot.add_cog(QueueSystem(bot))
-    bot.add_cog(songdata(bot))

@@ -32,7 +32,7 @@ class Utillity(commands.Cog):
         # Initalizes bot.
         self.bot = bot
         self.configcol = self.bot.mongodatabase["configs"]
-    
+
     @commands.command()
     async def poll(self, ctx, descript, option1="none", option2="none", option3="none", option4="none"):
         """Create a poll that users can use to vote. Max 4 options. Options must be in quotes. Description is required."""
@@ -60,7 +60,7 @@ class Utillity(commands.Cog):
 
         if option4 != "none":
             await message.add_reaction("4️⃣")
-    
+
     @commands.command()
     @commands.cooldown(rate=1, per=2.0, type=commands.BucketType.user)
     async def stocks(self, ctx, stock: str, time="1d"):
@@ -285,7 +285,7 @@ class Utillity(commands.Cog):
         conversionKey = async_google_trans_new.LANGUAGES
         reversed_dictionary = {value: key for (key, value) in conversionKey.items()}
 
-        if toLang == None and fromLang == None:
+        if toLang is None and fromLang is None:
             result = await translator.translate(text)
             source = await translator.detect(text)
 
@@ -300,7 +300,7 @@ class Utillity(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        elif fromLang == None:
+        elif fromLang is None:
             toLanglow = toLang.lower()
             toLangDictC = reversed_dictionary[toLanglow]
 
@@ -318,7 +318,7 @@ class Utillity(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        elif fromLang != None and toLang != None:  # if languages are specified
+        elif fromLang is not None and toLang is not None:  # if languages are specified
             fromLanglow = fromLang.lower()  # lowers languages
             toLanglow = toLang.lower()
 

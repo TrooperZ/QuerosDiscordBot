@@ -29,7 +29,7 @@ class TimeConverter(commands.Converter):
         try:
             time = int(time)
 
-        except:
+        except BaseException:
             time = float(time)
 
         return time
@@ -153,7 +153,7 @@ class Moderation(commands.Cog):
         await ctx.channel.send(embed=kick)
         try:
             await user.send(embed=kick)
-        except:
+        except BaseException:
             await ctx.send("Couldn't DM the user. Oh well.")
 
         await user.kick(reason=reason)
@@ -195,7 +195,7 @@ class Moderation(commands.Cog):
         await ctx.channel.send(embed=ban)
         try:
             await user.send(embed=ban)
-        except:
+        except BaseException:
             await ctx.send("Couldn't DM the user. Oh well.")
 
         await user.ban(reason=reason)
@@ -228,9 +228,8 @@ class Moderation(commands.Cog):
         await ctx.channel.send(embed=ban)
         try:
             await user.send(embed=ban)
-        except:
+        except BaseException:
             await ctx.send("Couldn't DM the user. Oh well.")
-            
 
         await user.ban(reason=reason)
 
@@ -252,9 +251,8 @@ class Moderation(commands.Cog):
         await ctx.channel.send(embed=unban)
         try:
             await user.send(embed=unban)
-        except:
+        except BaseException:
             await ctx.send("Couldn't DM the user. Oh well.")
-            
 
     @commands.command(aliases=["purge", "del", "delete"])
     @commands.has_permissions(manage_messages=True)
@@ -329,11 +327,10 @@ class Moderation(commands.Cog):
         await ctx.channel.send(embed=vcmute)
         try:
             await user.send(embed=vcmute)
-        except:
+        except BaseException:
             await ctx.send("Couldn't DM the user. Oh well.")
 
         self.modcol.insert_one(vcmutelisting)
-
 
     @commands.command()
     @commands.has_guild_permissions(mute_members=True)
@@ -386,7 +383,7 @@ class Moderation(commands.Cog):
         await ctx.channel.send(embed=vcmute)
         try:
             await user.send(embed=vcmute)
-        except:
+        except BaseException:
             await ctx.send("Couldn't DM the user. Oh well.")
 
         self.modcol.insert_one(vcmutelisting)
@@ -397,7 +394,7 @@ class Moderation(commands.Cog):
         """Unmutes a user in voice channel (Needs Mute Members permissions)"""
 
         role = discord.utils.get(ctx.guild.roles, name="Muted")
-        
+
         await user.remove_roles(role)
         unmute = discord.Embed(
             title=f"Removed Text Mute from {user.name}!\nGuild: {ctx.guild.name}",
@@ -407,9 +404,8 @@ class Moderation(commands.Cog):
         await ctx.send(embed=unmute)
         try:
             await user.send(embed=unmute)
-        except:
+        except BaseException:
             await ctx.send("Couldn't DM the user. Oh well.")
-
 
     @commands.command()
     @commands.has_guild_permissions(move_members=True)
@@ -420,7 +416,7 @@ class Moderation(commands.Cog):
     @commands.command(aliases=["temptxtmute", "softtxtmute", "softtextmute", "temptextmute"])
     @commands.has_permissions(manage_roles=True)
     async def mute(
-        self, ctx, user: discord.Member, duration: TimeConverter, *, reason="No reason"):
+            self, ctx, user: discord.Member, duration: TimeConverter, *, reason="No reason"):
         """Temp mutes a user in text channels. (Needs Manage Roles permissions)"""
 
         if discord.utils.get(ctx.guild.roles, name="Muted"):
@@ -462,7 +458,7 @@ class Moderation(commands.Cog):
         await ctx.send(embed=mute)
         try:
             await user.send(embed=mute)
-        except:
+        except BaseException:
             await ctx.send("Couldn't DM the user. Oh well.")
         self.modcol.insert_one(txtmutelisting)
 
@@ -514,7 +510,7 @@ class Moderation(commands.Cog):
         await ctx.send(embed=mute)
         try:
             await user.send(embed=mute)
-        except:
+        except BaseException:
             await ctx.send("Couldn't DM the user. Oh well.")
         self.modcol.insert_one(txtmutelisting)
 
@@ -534,7 +530,7 @@ class Moderation(commands.Cog):
         await ctx.send(embed=unmute)
         try:
             await user.send(embed=unmute)
-        except:
+        except BaseException:
             await ctx.send("Couldn't DM the user. Oh well.")
 
     @commands.command()
@@ -552,10 +548,9 @@ class Moderation(commands.Cog):
         )
         try:
             await user.send(f"You have been warned for: **{warning}** in the server: {ctx.guild.name}")
-        except:
+        except BaseException:
             await ctx.send("Couldn't DM the user. Oh well.")
-        
-        
+
         strDur = "N/A"
 
         warnlist = {
@@ -590,11 +585,11 @@ class Moderation(commands.Cog):
             itemsCount += 1
             try:
                 embed.add_field(name=f"** {x['infraction']} ** ` {x['_id']} `",
-                    value=f"Reason: ** {x['reason']} **\nTime: ** {x['time']} **\nPunisher: ** {x['punisher']} **\nDuration: ** {x['duration']} **",inline=False,)
+                                value=f"Reason: ** {x['reason']} **\nTime: ** {x['time']} **\nPunisher: ** {x['punisher']} **\nDuration: ** {x['duration']} **", inline=False,)
 
-            except:
+            except BaseException:
                 embed.add_field(name=f"** {x['infraction']} ** `{x['_id']} `",
-                    value=f"Reason: ** {x['reason']} **\nTime: ** {x['time']} **\nPunisher: ** {x['punisher']}**", inline=False,)
+                                value=f"Reason: ** {x['reason']} **\nTime: ** {x['time']} **\nPunisher: ** {x['punisher']}**", inline=False,)
 
             if itemsCount >= items:
                 break
