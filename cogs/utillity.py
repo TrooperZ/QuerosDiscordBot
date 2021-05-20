@@ -290,7 +290,7 @@ class Utillity(commands.Cog):
             source = await translator.detect(text)
 
             embed = discord.Embed(
-                title="**Queros Translate**",
+                title="**ButlerBot Translate**",
                 description="Here's the translated text!",
                 color=0x2B00FF,
             )
@@ -308,7 +308,7 @@ class Utillity(commands.Cog):
             source = await translator.detect(text)
 
             embed = discord.Embed(
-                title="**Queros Translate**",
+                title="**ButlerBot Translate**",
                 description="Here's the translated text!",
                 color=0x2B00FF,
             )
