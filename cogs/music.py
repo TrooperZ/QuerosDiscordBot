@@ -573,7 +573,7 @@ class Music(commands.Cog):
                 await ctx.send(":fast_forward: Skipping...")
                 ctx.voice_state.skip()
             else:
-                await ctx.send(f"Skip vote added, currently at **{total_votes} / {memLenF}**")
+                await ctx.send("Skip vote added, currently at **{total_votes} / {memLenF}**")
 
         else:
             await ctx.send('You have already voted to skip this song.')
@@ -704,7 +704,7 @@ class Music(commands.Cog):
         for i in cmds:
             cmdOff = i['commands']
             cmdsList.extend(cmdOff)
-        if 'skipoverskip' in cmdsList:
+        if 'skipOVRR' in cmdsList:
             return
 
         channelList = ['0']

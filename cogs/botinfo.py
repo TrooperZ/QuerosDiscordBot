@@ -26,7 +26,7 @@ class BotInfo(commands.Cog):
     @commands.cooldown(rate=1, per=5, type=commands.BucketType.user)
     async def botlink(self, ctx):
         """My link!"""
-        await ctx.send("Add ButlerBot to your server today!\nhttps://discord.com/oauth2/authorize?client_id=760856635425554492&permissions=2146954871&scope=bot")
+        await ctx.send("Add Queros to your server today!\nhttps://discord.com/oauth2/authorize?client_id=760856635425554492&permissions=2146954871&scope=bot")
 
     @commands.command()
     @commands.cooldown(rate=1, per=5, type=commands.BucketType.user)
@@ -52,7 +52,7 @@ class BotInfo(commands.Cog):
         memory = psutil.virtual_memory()
 
         uptime = f"{days}d, {hours}h, {minutes}m, {seconds}s"
-        embed = discord.Embed(title="ButlerBot Information", description="Info about creator and bot status")
+        embed = discord.Embed(title="Queros Information", description="Info about creator and bot status")
         embed.add_field(name="Uptime:", value=uptime, inline=True)
         embed.add_field(name="Creator:", value="TrooperZ", inline=True)
         embed.add_field(name="Total Users", value=str(len(set(self.bot.users))), inline=True)

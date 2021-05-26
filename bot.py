@@ -85,7 +85,7 @@ async def on_command_error(ctx, error):
         return
 
     if isinstance(error, commands.BotMissingPermissions):
-        await ctx.send("ButlerBot does not have the proper permissions. Try: \nGiving ButlerBot role or the other roles that ButlerBot has the proper permissions\nMoving ButlerBot up the role list\nMaking sure that the Muted roles are below ButlerBot's role.")
+        await ctx.send("Queros does not have the proper permissions. Try: \nGiving Queros role or the other roles that Queros has the proper permissions\nMoving Queros up the role list\nMaking sure that the Muted roles are below Queros's role.")
 
     print(error)
 

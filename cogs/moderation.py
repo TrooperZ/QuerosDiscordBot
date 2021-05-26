@@ -569,7 +569,7 @@ class Moderation(commands.Cog):
     @commands.command()
     @commands.cooldown(rate=1, per=5.0, type=commands.BucketType.user)
     async def usrhistory(self, ctx, user: discord.User, items=5):
-        """Gets a user's history. (Does not sync with non-ButlerBot moderation)"""
+        """Gets a user's history. (Does not sync with non-Queros moderation)"""
 
         history = self.modcol.find(
             {"$and": [{"userid": user.id}, {"guildid": ctx.message.guild.id}]}
