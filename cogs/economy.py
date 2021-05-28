@@ -19,64 +19,17 @@ class Economy(commands.Cog):
     @commands.cooldown(rate=1, per=20.0, type=commands.BucketType.user)
     async def bankopen(self, ctx):
         """Opens a bank for your cash"""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if "bankopen" in cmdsList:
-            return
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
-
         if self.balcol.count({"user": ctx.message.author.id}) > 0:
             await ctx.send("You already have a bank, get lost!")
             return
 
         self.balcol.insert_one({"user": ctx.message.author.id, "wallet": 0, "safe": 0})
-        await ctx.send(
-            ctx.author.mention
-            + ", you have opened a bank! Do u.bal to check your balance."
-        )
+        await ctx.send(f"{ctx.author.mention} you have opened a bank! Do u.bal to check your balance.")
 
     @commands.command(aliases=["bal"])
     @commands.cooldown(rate=1, per=3.0, type=commands.BucketType.user)
     async def balance(self, ctx, user=None):
         """Gets balance"""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if ("balance", "bal") in cmdsList:
-            return
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
-
         if user is None:
             user = ctx.message.author
         else:
@@ -112,27 +65,6 @@ class Economy(commands.Cog):
     @commands.cooldown(rate=1, per=120.0, type=commands.BucketType.user)
     async def forage(self, ctx):
         """Looks for coins"""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if "forage" in cmdsList:
-            return
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         randomCoins = random.randint(1, 100)
         balance = self.balcol.find({"user": ctx.message.author.id})
 
@@ -160,27 +92,6 @@ class Economy(commands.Cog):
     @commands.cooldown(rate=1, per=15.0, type=commands.BucketType.user)
     async def deposit(self, ctx, amt="all"):
         """Deposits wallet"""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if ("dep", "deposit") in cmdsList:
-            return
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         balance = self.balcol.find({"user": ctx.message.author.id})
 
         for x in balance:
@@ -223,27 +134,6 @@ class Economy(commands.Cog):
     @commands.cooldown(rate=1, per=15.0, type=commands.BucketType.user)
     async def withdraw(self, ctx, amt="all"):
         """Withdraws to wallet"""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if ("with", "withdraw") in cmdsList:
-            return
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         balance = self.balcol.find({"user": ctx.message.author.id})
 
         for x in balance:
@@ -288,27 +178,6 @@ class Economy(commands.Cog):
     @commands.cooldown(rate=1, per=86400, type=commands.BucketType.user)
     async def daily(self, ctx, amt="all"):
         """Grabs daily rations"""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if "daily" in cmdsList:
-            return
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         balance = self.balcol.find({"user": ctx.message.author.id})
         for x in balance:
             wallet = int(x["wallet"])
@@ -330,27 +199,6 @@ class Economy(commands.Cog):
     @commands.cooldown(rate=1, per=15, type=commands.BucketType.user)
     async def bet(self, ctx, amt=45):
         """Bets money. Need at least 100 coins"""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if ("bet", "gamble") in cmdsList:
-            return
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         if amt < 100:
             await ctx.send("Please bet more than **100** QuCoins.")
             return
@@ -433,27 +281,6 @@ class Economy(commands.Cog):
     @commands.cooldown(rate=1, per=8, type=commands.BucketType.user)
     async def pay(self, ctx, user: discord.Member, amt: int):
         """Gives coins to someone"""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if "pay" in cmdsList:
-            return
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         balance = self.balcol.find({"user": ctx.message.author.id})
         giver = self.balcol.find({"user": user.id})
 
@@ -494,27 +321,6 @@ class Economy(commands.Cog):
     @commands.cooldown(rate=1, per=120, type=commands.BucketType.user)
     async def steal(self, ctx, user: discord.Member):
         """Robs a person"""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if "steal" in cmdsList:
-            return
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         if user == ctx.message.author:
             await ctx.send("You rob yourself and find out that you're poor. :|")
             return
@@ -583,27 +389,6 @@ class Economy(commands.Cog):
     @commands.cooldown(rate=1, per=30.0, type=commands.BucketType.user)
     async def plscoins(self, ctx):
         """Looks for coins"""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if "plscoins" in cmdsList:
-            return
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         randomCoins = random.randint(1, 10)
         balance = self.balcol.find({"user": ctx.message.author.id})
 

@@ -17,34 +17,12 @@ class Image(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.configcol = self.bot.mongodatabase["configs"]
         self.bot.dagpi = bot.dagpi
 
     @commands.command()
     @commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
     async def pixel(self, ctx, user=None):
         """Pixelates an image."""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if "pixel" in cmdsList:
-            return
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-        if ctx.message.channel.id in channelList:
-            return
-
         if user is None:
             for attachment in ctx.message.attachments:
                 img = await self.bot.dagpi.image_process(
@@ -72,27 +50,6 @@ class Image(commands.Cog):
     @commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
     async def blur(self, ctx, user=None):
         """Blurs an image."""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if "blur" in cmdsList:
-            return
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-        if ctx.message.channel.id in channelList:
-            return
-
         if user is None:
             for attachment in ctx.message.attachments:
                 img = await self.bot.dagpi.image_process(
@@ -120,27 +77,6 @@ class Image(commands.Cog):
     @commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
     async def deepfry(self, ctx, user=None):
         """Deepfries an image, must put command with uploaded image"""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if "deepfry" in cmdsList:
-            return
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-        if ctx.message.channel.id in channelList:
-            return
-
         if user is None:
             for attachment in ctx.message.attachments:
                 imageID = random.randint(0, 1000000000)
@@ -176,27 +112,6 @@ class Image(commands.Cog):
     @commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
     async def invert(self, ctx, user=None):
         """Inverts an image."""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if "invert" in cmdsList:
-            return
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-        if ctx.message.channel.id in channelList:
-            return
-
         if user is None:
             for attachment in ctx.message.attachments:
                 img = await self.bot.dagpi.image_process(

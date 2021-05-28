@@ -46,26 +46,6 @@ class Fun(commands.Cog):
     @commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
     async def pickupline(self, ctx):
         """Generates a pickup line, may be NSFW"""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if "pickupline" in cmdsList:
-            return
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-        if ctx.message.channel.id in channelList:
-            return
         line = await self.bot.dagpi.pickup_line()
         await ctx.send(line.line)
 
@@ -73,78 +53,18 @@ class Fun(commands.Cog):
     @commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
     async def joke(self, ctx):
         """Generates a joke, may be NSFW"""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if "joke" in cmdsList:
-            return
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-        if ctx.message.channel.id in channelList:
-            return
         await ctx.send(await self.bot.dagpi.joke())
 
     @commands.command()
     @commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
     async def roast(self, ctx):
         """Generates a roast, may be NSFW"""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if "roast" in cmdsList:
-            return
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-        if ctx.message.channel.id in channelList:
-            return
         await ctx.send(await self.bot.dagpi.roast())
 
     @commands.command()
     @commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
     async def yomama(self, ctx):
         """Generates a roast, may be NSFW"""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if "yomama" in cmdsList:
-            return
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-        if ctx.message.channel.id in channelList:
-            return
         await ctx.send(await self.bot.dagpi.yomama())
 
     @commands.command()
@@ -168,26 +88,6 @@ class Fun(commands.Cog):
     @commands.cooldown(rate=1, per=5.0, type=commands.BucketType.user)
     async def kill(self, ctx, user: discord.Member):
         """Eliminates a user of your choice."""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if "kill" in cmdsList:
-            return
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         kill_choices = [
             f"{user.name} just got 360 noscoped by {ctx.message.author.name}, let's gooooooo!",
             f"{user.name} drank expired milk and died.",
@@ -204,26 +104,6 @@ class Fun(commands.Cog):
     # @commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
     # async def redditgrab(self, ctx, subreddit: str, spoiler="no"):
     #    """Grabs a post from reddit subreddit, add tag spoiler to add a spoiler."""
-    #    cmds = self.configcol.find(
-    #        {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-    #    )
-    #    cmdsList = ["0"]
-    #    for i in cmds:
-    #        cmdOff = i["commands"]
-    #        cmdsList.extend(cmdOff)
-    #    if "redditgrab" in cmdsList:
-    #        return
-    #    channelList = ["0"]
-    #    channels = self.configcol.find(
-    #        {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-    #    )
-
-    #    for i in channels:
-    #        channeloff = i["channels"]
-    #        channelList.extend(channeloff)
-
-    #    if ctx.message.channel.id in channelList:
-    #        return
     #    await ctx.channel.trigger_typing()
     #    try:
     #        subredditGrabbed = await reddit.subreddit(subreddit)
@@ -298,28 +178,6 @@ class Fun(commands.Cog):
     @commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
     async def eightb(self, ctx: commands.Context, *, query: str):
         """Eight Ball shall tell your future"""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if "8ball" in cmdsList:
-            return
-        elif "eightb" in cmdsList:
-            return
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         if query.endswith("?") != True:
             await ctx.send("Ask me a yes or no question that ends with a question mark.")
             return

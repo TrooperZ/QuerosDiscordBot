@@ -44,6 +44,7 @@ bot.help_command = PrettyHelp(color=0x6BD5FF, active=60, verify_checks=False)
 bot.wavelink = wavelink.Client(bot=bot)
 bot.mongodatabase = mongoclient["data"]
 bot.dagpi = dagpiClient(os.getenv("DAGPI_TOKEN"))
+configcol = bot.mongodatabase["configs"]
 
 if __name__ == "__main__":
     for extension in [
@@ -64,6 +65,24 @@ if __name__ == "__main__":
 async def on_ready():
     print("Bot is online.")
 
+@bot.check
+async def globally_block_dms(ctx):
+    cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]})
+    cmdsList = ["0"]
+    for i in cmds:
+        cmdOff = i["commands"]
+        cmdsList.extend(cmdOff)
+        if ctx.invoked_with in cmdsList:
+            return
+
+    channelList = ["0"]
+    channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]})
+
+    for i in channels:
+        channeloff = i["channels"]
+        channelList.extend(channeloff)
+        if ctx.message.channel.id in channelList:
+            return
 
 @bot.event
 async def on_command_error(ctx, error):

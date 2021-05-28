@@ -45,7 +45,7 @@ class Dev(commands.Cog):
         await self.bot.change_presence(
             activity=discord.Activity(
                 type=discord.ActivityType.listening,
-                name="u.help in " + str(len(self.bot.guilds)) + " servers",
+                name="to commands in " + str(len(self.bot.guilds)) + " servers",
             )
         )
 

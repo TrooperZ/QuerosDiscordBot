@@ -31,7 +31,6 @@ class Utillity(commands.Cog):
     def __init__(self, bot):
         # Initalizes bot.
         self.bot = bot
-        self.configcol = self.bot.mongodatabase["configs"]
 
     @commands.command()
     async def poll(self, ctx, descript, option1="none", option2="none", option3="none", option4="none"):
@@ -67,30 +66,6 @@ class Utillity(commands.Cog):
         """Grabs stock info for a ticker of your choice.
         Choose from 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, and max"""
         try:
-            cmds = self.configcol.find(
-                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-            )
-            cmdsList = ["0"]
-
-            for i in cmds:
-                cmdOff = i["commands"]
-                cmdsList.extend(cmdOff)
-
-            if "stonks" in cmdsList:
-                return
-
-            channelList = ["0"]
-            channels = self.configcol.find(
-                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-            )
-
-            for i in channels:
-                channeloff = i["channels"]
-                channelList.extend(channeloff)
-
-            if ctx.message.channel.id in channelList:
-                return
-
             await ctx.channel.trigger_typing()
 
             if time not in (
@@ -159,31 +134,9 @@ class Utillity(commands.Cog):
 
     @commands.command()
     @commands.cooldown(rate=1, per=2.0, type=commands.BucketType.user)
-    async def raninteger(
-        self, ctx, num1: int, num2: int
-    ):  # Generates a random number within 2 integers.
+    async def raninteger(self, ctx, num1: int, num2: int):  # Generates a random number within 2 integers.
         """Gives a random integer within two predefined integers.
         Example: u.raninteger 2 9"""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if "raninteger" in cmdsList:
-            return
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         try:
             if num1 < num2:  # checks if 1st num is less than 2nd
                 resultNum = random.randint(num1, num2)  # generates number
@@ -205,27 +158,6 @@ class Utillity(commands.Cog):
         Example: u.search How to make pizza"""
         # embed stuff
         try:
-            cmds = self.configcol.find(
-                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-            )
-            cmdsList = ["0"]
-            for i in cmds:
-                cmdOff = i["commands"]
-                cmdsList.extend(cmdOff)
-            if "gsearch" in cmdsList:
-                return
-            channelList = ["0"]
-            channels = self.configcol.find(
-                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-            )
-
-            for i in channels:
-                channeloff = i["channels"]
-                channelList.extend(channeloff)
-
-            if ctx.message.channel.id in channelList:
-                return
-
             await ctx.channel.trigger_typing()
             embed = discord.Embed(
                 title="Results for: *" + searchQ + "*", color=0x5EC1FF
@@ -258,27 +190,6 @@ class Utillity(commands.Cog):
         u.translate "je suis faim" spanish (toLang is specified and translates to Spanish)
         u.translate "no habla espanol" french spanish (fromLang and toLang are specified and it does the translation)
         """
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if "translate" in cmdsList:
-            return
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         await ctx.channel.trigger_typing()
         translator = async_google_trans_new.google_translator()
 
@@ -344,31 +255,6 @@ class Utillity(commands.Cog):
     @commands.cooldown(rate=1, per=1.0, type=commands.BucketType.user)
     async def calc(self, ctx, *, equation):  # simple calculator
         """Calculates math problems. Only use symbols and numbers for now."""
-        cmds = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
-        )
-        cmdsList = ["0"]
-        for i in cmds:
-            cmdOff = i["commands"]
-            cmdsList.extend(cmdOff)
-        if "calc" in cmdsList:
-            return
-        elif "calculate" in cmdsList:
-            return
-        elif "calculator" in cmdsList:
-            return
-
-        channelList = ["0"]
-        channels = self.configcol.find(
-            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
-        )
-
-        for i in channels:
-            channeloff = i["channels"]
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         try:
 
             try:

@@ -14,17 +14,7 @@ import youtube_dl
 import time
 import functools
 import datetime
-import pymongo
 import math
-from dotenv import load_dotenv
-
-load_dotenv()
-
-MONGO_PASS = os.getenv('MONGO_PASS')
-myclient = pymongo.MongoClient("mongodb+srv://queroscode:" + MONGO_PASS + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority")
-mydb = myclient["data"]
-configcol = mydb["configs"]
-
 
 class VoiceError(Exception):
     pass
@@ -320,24 +310,6 @@ class Music(commands.Cog):
     @commands.command(name='join', invoke_without_subcommand=True)
     async def _join(self, ctx: commands.Context):
         """Joins a voice channel of your choice."""
-        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-        cmdsList = ['0']
-        for i in cmds:
-            cmdOff = i['commands']
-            cmdsList.extend(cmdOff)
-        if 'join' in cmdsList:
-            return
-
-        channelList = ['0']
-        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-        for i in channels:
-            channeloff = i['channels']
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
-
         self.join_requester = ctx.message.author
         if ctx.voice_state.is_playing:
             await ctx.send("Bot is being used, please have a DJ move it.")
@@ -359,23 +331,6 @@ class Music(commands.Cog):
             await ctx.send(":no_entry: Missing permissions.")
             return
 
-        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-        cmdsList = ['0']
-        for i in cmds:
-            cmdOff = i['commands']
-            cmdsList.extend(cmdOff)
-        if 'summon' in cmdsList:
-            return
-
-        channelList = ['0']
-        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-        for i in channels:
-            channeloff = i['channels']
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         self.join_requester = ctx.message.author
         if not channel and not ctx.author.voice:
             await ctx.send('Join a VC.')
@@ -393,24 +348,6 @@ class Music(commands.Cog):
     @commands.command(name='leave', aliases=['disconnect', 'quit'])
     async def _leave(self, ctx: commands.Context):
         """Clears the queue and leaves the voice channel."""
-        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-        cmdsList = ['0']
-        for i in cmds:
-            cmdOff = i['commands']
-            cmdsList.extend(cmdOff)
-        if 'leave' in cmdsList:
-            return
-
-        channelList = ['0']
-        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-        for i in channels:
-            channeloff = i['channels']
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
-
         if not ctx.voice_state.voice:
             return await ctx.send('Not connected to any voice channel.')
 
@@ -435,24 +372,6 @@ class Music(commands.Cog):
             await ctx.send(":no_entry: Missing permissions.")
             return
 
-        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-        cmdsList = ['0']
-        for i in cmds:
-            cmdOff = i['commands']
-            cmdsList.extend(cmdOff)
-        if 'volume' in cmdsList:
-            return
-
-        channelList = ['0']
-        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-        for i in channels:
-            channeloff = i['channels']
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
-
         if not ctx.voice_state.is_playing:
             return await ctx.send('Not playing anything.')
 
@@ -463,92 +382,24 @@ class Music(commands.Cog):
     @commands.cooldown(rate=1, per=2.5, type=commands.BucketType.user)
     async def _now(self, ctx: commands.Context):
         """Displays the currently playing song."""
-        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-        cmdsList = ['0']
-        for i in cmds:
-            cmdOff = i['commands']
-            cmdsList.extend(cmdOff)
-        if 'now' in cmdsList:
-            return
-
-        channelList = ['0']
-        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-        for i in channels:
-            channeloff = i['channels']
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         embed = ctx.voice_state.current.create_embed()
         await ctx.send(embed=embed)
 
     @commands.command(name='pause', aliases=['pa'])
     async def _pause(self, ctx: commands.Context):
         """Pauses the currently playing song."""
-        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-        cmdsList = ['0']
-        for i in cmds:
-            cmdOff = i['commands']
-            cmdsList.extend(cmdOff)
-        if 'pause' in cmdsList:
-            return
-
-        channelList = ['0']
-        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-        for i in channels:
-            channeloff = i['channels']
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         ctx.voice_state.voice.pause()
         await ctx.send(":pause_button:  Pausing your song.")
 
     @commands.command(name='resume')
     async def _resume(self, ctx: commands.Context):
         """Resumes a currently paused song."""
-        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-        cmdsList = ['0']
-        for i in cmds:
-            cmdOff = i['commands']
-            cmdsList.extend(cmdOff)
-        if 'resume' in cmdsList:
-            return
-
-        channelList = ['0']
-        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-        for i in channels:
-            channeloff = i['channels']
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         await ctx.send(":arrow_forward:  Resuming.")
         ctx.voice_state.voice.resume()
 
     @commands.command(name='skip', aliases=['next'])
     async def _skip(self, ctx: commands.Context):
         """Vote to skip a song. The requester can automatically skip."""
-        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-        cmdsList = ['0']
-        for i in cmds:
-            cmdOff = i['commands']
-            cmdsList.extend(cmdOff)
-        if 'skip' in cmdsList:
-            return
-
-        channelList = ['0']
-        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-        for i in channels:
-            channeloff = i['channels']
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         channel = ctx.author.voice.channel
         members = channel.members
         memids = []
@@ -581,24 +432,6 @@ class Music(commands.Cog):
     @commands.command(name='queue')
     async def _queue(self, ctx: commands.Context, *, page: int = 1):
         """Shows the player's queue. Choose the pages by adding a number. Each page shows 10 items."""
-        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-        cmdsList = ['0']
-        for i in cmds:
-            cmdOff = i['commands']
-            cmdsList.extend(cmdOff)
-        if 'queue' in cmdsList:
-            return
-
-        channelList = ['0']
-        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-        for i in channels:
-            channeloff = i['channels']
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
-
         if len(ctx.voice_state.songs) == 0:
             return await ctx.send('Empty queue.')
 
@@ -620,23 +453,6 @@ class Music(commands.Cog):
     @commands.cooldown(rate=1, per=1.5, type=commands.BucketType.user)
     async def _shuffle(self, ctx: commands.Context):
         """Shuffles the queue. DJ Command."""
-        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-        cmdsList = ['0']
-        for i in cmds:
-            cmdOff = i['commands']
-            cmdsList.extend(cmdOff)
-        if 'shuffle' in cmdsList:
-            return
-
-        channelList = ['0']
-        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-        for i in channels:
-            channeloff = i['channels']
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         ctx.voice_state.songs.shuffle()
         await ctx.send("Shuffling songs...")
 
@@ -646,23 +462,7 @@ class Music(commands.Cog):
         if "dj" not in [y.name.lower() for y in ctx.author.roles]:
             await ctx.send(":no_entry: Missing permissions.")
             return
-        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-        cmdsList = ['0']
-        for i in cmds:
-            cmdOff = i['commands']
-            cmdsList.extend(cmdOff)
-        if 'remove' in cmdsList:
-            return
 
-        channelList = ['0']
-        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-        for i in channels:
-            channeloff = i['channels']
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         ctx.voice_state.songs.remove(index - 1)
         await ctx.send("Removing song from list.")
 
@@ -673,23 +473,7 @@ class Music(commands.Cog):
         if "dj" not in [y.name.lower() for y in ctx.author.roles]:
             await ctx.send(":no_entry: Missing permissions.")
             return
-        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-        cmdsList = ['0']
-        for i in cmds:
-            cmdOff = i['commands']
-            cmdsList.extend(cmdOff)
-        if 'loop' in cmdsList:
-            return
 
-        channelList = ['0']
-        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-        for i in channels:
-            channeloff = i['channels']
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         ctx.voice_state.loop = not ctx.voice_state.loop
         await ctx.send("Looping toggled.")
 
@@ -698,23 +482,6 @@ class Music(commands.Cog):
         """Skip command that overrides standard command. DJ Command."""
         if "dj" not in [y.name.lower() for y in ctx.author.roles]:
             await ctx.send(":no_entry: Missing permissions.")
-            return
-        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-        cmdsList = ['0']
-        for i in cmds:
-            cmdOff = i['commands']
-            cmdsList.extend(cmdOff)
-        if 'skipOVRR' in cmdsList:
-            return
-
-        channelList = ['0']
-        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-        for i in channels:
-            channeloff = i['channels']
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
             return
         await ctx.send(":fast_forward: Skipping with elevated permissions.")
         ctx.voice_state.skip()
@@ -726,23 +493,6 @@ class Music(commands.Cog):
             await ctx.send(":no_entry: Missing permissions.")
             return
 
-        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-        cmdsList = ['0']
-        for i in cmds:
-            cmdOff = i['commands']
-            cmdsList.extend(cmdOff)
-        if 'stop' in cmdsList:
-            return
-
-        channelList = ['0']
-        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-        for i in channels:
-            channeloff = i['channels']
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
         await ctx.send("Stopping with elevated permissions.")
         ctx.voice_state.songs.clear()
         ctx.voice_state.voice.stop()
@@ -756,24 +506,6 @@ class Music(commands.Cog):
         This command automatically searches from various sites if no URL is provided.
         A list of these sites can be found here: https://rg3.github.io/youtube-dl/supportedsites.html
         """
-        cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'cmdsoff'}]})
-        cmdsList = ['0']
-        for i in cmds:
-            cmdOff = i['commands']
-            cmdsList.extend(cmdOff)
-        if 'play' in cmdsList:
-            return
-
-        channelList = ['0']
-        channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": 'channeloff'}]})
-
-        for i in channels:
-            channeloff = i['channels']
-            channelList.extend(channeloff)
-
-        if ctx.message.channel.id in channelList:
-            return
-
         if not ctx.voice_state.voice:
             await ctx.invoke(self._join)
             await asyncio.sleep(3)
