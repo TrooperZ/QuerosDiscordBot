@@ -188,7 +188,7 @@ class Configuration(commands.Cog):
         await member.send(file=discord.File(f"{captchaAMT}CAPTCHA.png"))
 
         def check(m):
-            return m.content == captcha and m.guild is None
+            return m.content == captchaAMT and m.guild is None
 
         await self.bot.wait_for('message', check=check)
         await member.send("Captcha verified. Giving you access...")
