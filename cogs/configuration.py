@@ -180,17 +180,17 @@ class Configuration(commands.Cog):
             capStat = i['status']
         if capStat == 'off':
             return
-        msg = await member.send(f"Hey there {member}, we just need to do one little thing to make sure you're a human and not anything malicious... Please complete this captcha:")
+        msg = await member.send(f"Hey there {member}, we just need to do one little thing to make sure you're a human and not anything malicious... Please complete this captcha (note, you have 1 try, if it is not correct, you will have to rejoin.):")
         image = ImageCaptcha()
-        captchaAMT = secrets.token_urlsafe(3)
+        captchaAMT = secrets.token_urlsafe(4)
         data = image.generate(captchaAMT)
         image.write(captchaAMT, f"{captchaAMT}CAPTCHA.png")
         await member.send(file=discord.File(f"{captchaAMT}CAPTCHA.png"))
 
-        def check(c):
+        def check(m):
             return m.content == captcha and m.guild is None
 
-        await self.bot.wait_for('message')
+        await self.bot.wait_for('message', check=check)
         await member.send("Captcha verified. Giving you access...")
 
         if discord.utils.get(member.guild.roles, name="Captcha Verified"):
