@@ -294,7 +294,7 @@ class Moderation(commands.Cog):
         else:
             perms = discord.Permissions(speak=False)
             await ctx.guild.create_role(
-                name="Voice Muted", permissions=perms, color=Rcolor
+                name="Voice Muted", permissions=perms
             )
 
             role = discord.utils.get(ctx.guild.roles, name="Voice Muted")
@@ -362,7 +362,7 @@ class Moderation(commands.Cog):
         else:
             perms = discord.Permissions(speak=False)
             await ctx.guild.create_role(
-                name="Voice Muted", permissions=perms, color=Rcolor
+                name="Voice Muted", permissions=perms
             )
 
             role = discord.utils.get(ctx.guild.roles, name="Voice Muted")
@@ -432,7 +432,7 @@ class Moderation(commands.Cog):
 
         else:
             perms = discord.Permissions(send_messages=False, read_messages=True)
-            await ctx.guild.create_role(name="Muted", permissions=perms, color=Rcolor)
+            await ctx.guild.create_role(name="Muted", permissions=perms)
 
             role = discord.utils.get(ctx.guild.roles, name="Muted")
             await user.add_roles(role)
@@ -482,7 +482,7 @@ class Moderation(commands.Cog):
 
         else:
             perms = discord.Permissions(send_messages=False, read_messages=True)
-            await ctx.guild.create_role(name="Muted", permissions=perms, color=Rcolor)
+            await ctx.guild.create_role(name="Muted", permissions=perms)
 
             role = discord.utils.get(ctx.guild.roles, name="Muted")
             await user.add_roles(role)

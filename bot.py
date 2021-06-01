@@ -87,6 +87,7 @@ async def global_cmd_check(ctx):
 
 @bot.event
 async def on_command_error(ctx, error):
+    print(error)
     if isinstance(error, commands.CommandOnCooldown):
         if error.retry_after < 1:
             await ctx.send(f"This command is on a `{round(error.retry_after, 2)} second` cooldown, try again later.")
