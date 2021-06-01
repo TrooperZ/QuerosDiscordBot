@@ -1,7 +1,13 @@
 import discord
 from discord.ext import commands
 from discord.ext import tasks
+import dotenv
+import dbl
+import os
 
+dotenv.load_dotenv()
+
+TOPGG_TOKEN = os.getenv('TOPGG_TOKEN')
 
 class Dev(commands.Cog):
     def __init__(self, bot):
@@ -42,12 +48,8 @@ class Dev(commands.Cog):
 
     @tasks.loop(seconds=360)
     async def statusLoop(self):
-        await self.bot.change_presence(
-            activity=discord.Activity(
-                type=discord.ActivityType.listening,
-                name="to commands in " + str(len(self.bot.guilds)) + " servers",
-            )
-        )
+        await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=f"to commands in {len(self.bot.guilds)} servers"))
+        await bot.dblpy.post_guild_count()
 
     @statusLoop.before_loop  # basic loop handeling
     async def before_statusLoop(self):
