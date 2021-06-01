@@ -1,7 +1,7 @@
 import os
 import random
 import sys
-import secrets
+import string
 
 import discord
 import pymongo
@@ -180,9 +180,9 @@ class Configuration(commands.Cog):
             capStat = i['status']
         if capStat == 'off':
             return
-        msg = await member.send(f"Hey there {member}, we just need to do one little thing to make sure you're a human and not anything malicious... Please complete this captcha (note, you have 1 try, if it is not correct, you will have to rejoin.):")
+        msg = await member.send(f"Hey there {member}, we just need to do one little thing to make sure you're a human and not anything malicious... Please complete this captcha (rejoin to regenerate a captcha):")
         image = ImageCaptcha()
-        captchaAMT = secrets.token_urlsafe(4)
+        captchaAMT = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
         data = image.generate(captchaAMT)
         image.write(captchaAMT, f"{captchaAMT}CAPTCHA.png")
         await member.send(file=discord.File(f"{captchaAMT}CAPTCHA.png"))

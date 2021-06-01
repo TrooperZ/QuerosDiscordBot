@@ -50,7 +50,7 @@ class Dev(commands.Cog):
     @tasks.loop(seconds=360)
     async def statusLoop(self):
         await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=f"to commands in {len(self.bot.guilds)} servers"))
-        await self.bot.dblpy.post_guild_count()
+        #await self.bot.dblpy.post_guild_count()
 
     @statusLoop.before_loop  # basic loop handeling
     async def before_statusLoop(self):
