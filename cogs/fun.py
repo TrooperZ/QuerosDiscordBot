@@ -194,7 +194,7 @@ class Fun(commands.Cog):
                 "That question is beyond my knowledge",
                 "Dunno.",
             ]
-            await ctx.send(f"{random.choice(resultNeu)} ||{valuE}||")
+            await ctx.send(f"{random.choice(resultNeu)} SeedGen:||{valuE}||")
             return
 
         if (valuE % 2) > 0:
@@ -206,7 +206,7 @@ class Fun(commands.Cog):
                 "99.99% yes",
                 "Seems like its yes.",
             ]
-            await ctx.send(f"{random.choice(resultPos)} ||{valuE}||")
+            await ctx.send(f"{random.choice(resultPos)} SeedGen:||{valuE}||")
             return
 
         if (valuE % 2) == 0:
@@ -218,7 +218,7 @@ class Fun(commands.Cog):
                 "Uhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh no.",
                 "Nope, nada, and nah.",
             ]
-            await ctx.send(random.choice(f"{random.choice(resultNo)} ||{valuE}||"))
+            await ctx.send(random.choice(f"{random.choice(resultNo)} SeedGen:||{valuE}||"))
             return
 
 
