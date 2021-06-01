@@ -184,7 +184,7 @@ class Fun(commands.Cog):
         valuE = 0
 
         for letter in query:
-            valuE = valuE + (ord(letter) * ord(letter))
+            valuE = valuE + ord(letter)
             if (valuE % 5) == 0:
                 resultNeu = [
                     "I cannot predict that",
