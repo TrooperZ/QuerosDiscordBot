@@ -66,14 +66,15 @@ async def on_ready():
     print("Bot is online.")
 
 @bot.check
-async def globally_block_dms(ctx):
+async def global_cmd_check(ctx):
     cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]})
     cmdsList = ["0"]
     for i in cmds:
         cmdOff = i["commands"]
         cmdsList.extend(cmdOff)
         if ctx.invoked_with in cmdsList:
-            return
+            return False
+    return True
 
     channelList = ["0"]
     channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]})

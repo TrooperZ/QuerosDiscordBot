@@ -34,7 +34,6 @@ class Fun(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.configcol = self.bot.mongodatabase["configs"]
         self.bot.dagpi = bot.dagpi
         self.bot.snipes = {}
 

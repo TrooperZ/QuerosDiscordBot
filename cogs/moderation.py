@@ -66,55 +66,58 @@ class Moderation(commands.Cog):
 
     @tasks.loop(seconds=30.0)
     async def remove_inf(self):
-        cursor = self.modcol.find({})
-        for document in cursor:
-            if document["status"] == "finished":
-                continue
-            if float(document["removetime"]) < time.time():
-                if document["infraction"] == "Softban":
-                    serverGuild = self.bot.get_guild(int(document["guildid"]))
-                    user = self.bot.get_user(int(document["userid"]))
-                    await serverGuild.unban(user)
-                    self.modcol.update_one(
-                        {"_id": document["_id"]},
-                        {"$set": {"status": "finished"}},
-                        upsert=False,
-                    )
+        try:
+            cursor = self.modcol.find({})
+            for document in cursor:
+                if document["status"] == "finished":
+                    continue
+                if float(document["removetime"]) < time.time():
+                    if document["infraction"] == "Softban":
+                        serverGuild = self.bot.get_guild(int(document["guildid"]))
+                        user = self.bot.get_user(int(document["userid"]))
+                        await serverGuild.unban(user)
+                        self.modcol.update_one(
+                            {"_id": document["_id"]},
+                            {"$set": {"status": "finished"}},
+                            upsert=False,
+                        )
 
-                elif document["infraction"] == "Temp VC Mute":
-                    serverGuild = self.bot.get_guild(int(document["guildid"]))
-                    userId = int(document["userid"])
-                    user = await serverGuild.fetch_member(userId)
-                    await user.edit(mute=False)
-                    self.modcol.update_one(
-                        {"_id": document["_id"]},
-                        {"$set": {"status": "finished"}},
-                        upsert=False,
-                    )
+                    elif document["infraction"] == "Temp VC Mute":
+                        serverGuild = self.bot.get_guild(int(document["guildid"]))
+                        userId = int(document["userid"])
+                        user = await serverGuild.fetch_member(userId)
+                        await user.edit(mute=False)
+                        self.modcol.update_one(
+                            {"_id": document["_id"]},
+                            {"$set": {"status": "finished"}},
+                            upsert=False,
+                        )
 
-                elif document["infraction"] == "Temp Deafen":
-                    serverGuild = self.bot.get_guild(int(document["guildid"]))
-                    userId = int(document["userid"])
-                    user = await serverGuild.fetch_member(userId)
-                    await user.edit(deafen=False)
-                    self.modcol.update_one(
-                        {"_id": document["_id"]},
-                        {"$set": {"status": "finished"}},
-                        upsert=False,
-                    )
+                    elif document["infraction"] == "Temp Deafen":
+                        serverGuild = self.bot.get_guild(int(document["guildid"]))
+                        userId = int(document["userid"])
+                        user = await serverGuild.fetch_member(userId)
+                        await user.edit(deafen=False)
+                        self.modcol.update_one(
+                            {"_id": document["_id"]},
+                            {"$set": {"status": "finished"}},
+                            upsert=False,
+                        )
 
-                elif document["infraction"] == "Temp Chat Mute":
-                    serverGuild = self.bot.get_guild(int(document["guildid"]))
-                    userId = int(document["userid"])
-                    user = await serverGuild.fetch_member(userId)
-                    role = discord.utils.get(serverGuild.roles, name="Muted")
-                    await user.remove_roles(role)
-                    self.modcol.update_one(
-                        {"_id": document["_id"]},
-                        {"$set": {"status": "finished"}},
-                        upsert=False,
-                    )
-        await asyncio.sleep(0.5)
+                    elif document["infraction"] == "Temp Chat Mute":
+                        serverGuild = self.bot.get_guild(int(document["guildid"]))
+                        userId = int(document["userid"])
+                        user = await serverGuild.fetch_member(userId)
+                        role = discord.utils.get(serverGuild.roles, name="Muted")
+                        await user.remove_roles(role)
+                        self.modcol.update_one(
+                            {"_id": document["_id"]},
+                            {"$set": {"status": "finished"}},
+                            upsert=False,
+                        )
+            await asyncio.sleep(0.5)
+        except:
+            print("nothing found so its skippin")
 
     @remove_inf.before_loop
     async def before_some_task(self):
