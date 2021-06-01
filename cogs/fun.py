@@ -193,7 +193,7 @@ class Fun(commands.Cog):
                     "That question is beyond my knowledge",
                     "Dunno.",
                 ]
-                await ctx.send(random.choice(resultNeu))
+                await ctx.send(f"{random.choice(resultNeu)} ||{valuE}||")
                 return
 
             if (valuE % 2) > 0:
@@ -205,7 +205,7 @@ class Fun(commands.Cog):
                     "99.99% yes",
                     "Seems like its yes.",
                 ]
-                await ctx.send(random.choice(resultPos))
+                await ctx.send(f"{random.choice(resultPos)} ||{valuE}||")
                 return
 
             if (valuE % 2) == 0:
@@ -217,7 +217,7 @@ class Fun(commands.Cog):
                     "Uhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh no.",
                     "Nope, nada, and nah.",
                 ]
-                await ctx.send(random.choice(resultNo))
+                await ctx.send(random.choice(f"{random.choice(resultNo)} ||{valuE}||"))
                 return
 
 
