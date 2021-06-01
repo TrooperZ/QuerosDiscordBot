@@ -174,7 +174,7 @@ class Fun(commands.Cog):
     #        await ctx.send(embed=embed)
 
     @commands.command(aliases=["8ball"])
-    @commands.cooldown(rate=1, per=10.0, type=commands.BucketType.user)
+    @commands.cooldown(rate=1, per=5.0, type=commands.BucketType.user)
     async def eightb(self, ctx: commands.Context, *, query: str):
         """Eight Ball shall tell your future"""
         if query.endswith("?") != True:
@@ -191,6 +191,7 @@ class Fun(commands.Cog):
                     "Only time will tell",
                     "Ask me later",
                     "That question is beyond my knowledge",
+                    "Dunno.",
                 ]
                 await ctx.send(random.choice(resultNeu))
                 return
@@ -201,6 +202,8 @@ class Fun(commands.Cog):
                     "My sources point to yes",
                     "High chance",
                     "I think yes",
+                    "99.99% yes",
+                    "Seems like its yes.",
                 ]
                 await ctx.send(random.choice(resultPos))
                 return
@@ -211,6 +214,8 @@ class Fun(commands.Cog):
                     "High chance of no",
                     "I don't think it is a yes...",
                     "Sources point to no",
+                    "Uhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh no.",
+                    "Nope, nada, and nah.",
                 ]
                 await ctx.send(random.choice(resultNo))
                 return
