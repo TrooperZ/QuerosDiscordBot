@@ -185,40 +185,41 @@ class Fun(commands.Cog):
 
         for letter in query:
             valuE = valuE + ord(letter)
-            if (valuE % 5) == 0:
-                resultNeu = [
-                    "I cannot predict that",
-                    "Only time will tell",
-                    "Ask me later",
-                    "That question is beyond my knowledge",
-                    "Dunno.",
-                ]
-                await ctx.send(f"{random.choice(resultNeu)} ||{valuE}||")
-                return
 
-            if (valuE % 2) > 0:
-                resultPos = [
-                    "Most likely",
-                    "My sources point to yes",
-                    "High chance",
-                    "I think yes",
-                    "99.99% yes",
-                    "Seems like its yes.",
-                ]
-                await ctx.send(f"{random.choice(resultPos)} ||{valuE}||")
-                return
+        if (valuE % 5) == 0:
+            resultNeu = [
+                "I cannot predict that",
+                "Only time will tell",
+                "Ask me later",
+                "That question is beyond my knowledge",
+                "Dunno.",
+            ]
+            await ctx.send(f"{random.choice(resultNeu)} ||{valuE}||")
+            return
 
-            if (valuE % 2) == 0:
-                resultNo = [
-                    "Not likely",
-                    "High chance of no",
-                    "I don't think it is a yes...",
-                    "Sources point to no",
-                    "Uhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh no.",
-                    "Nope, nada, and nah.",
-                ]
-                await ctx.send(random.choice(f"{random.choice(resultNo)} ||{valuE}||"))
-                return
+        if (valuE % 2) > 0:
+            resultPos = [
+                "Most likely",
+                "My sources point to yes",
+                "High chance",
+                "I think yes",
+                "99.99% yes",
+                "Seems like its yes.",
+            ]
+            await ctx.send(f"{random.choice(resultPos)} ||{valuE}||")
+            return
+
+        if (valuE % 2) == 0:
+            resultNo = [
+                "Not likely",
+                "High chance of no",
+                "I don't think it is a yes...",
+                "Sources point to no",
+                "Uhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh no.",
+                "Nope, nada, and nah.",
+            ]
+            await ctx.send(random.choice(f"{random.choice(resultNo)} ||{valuE}||"))
+            return
 
 
 # setups command.  command is needed, make sure to use cogs.[name of file]
