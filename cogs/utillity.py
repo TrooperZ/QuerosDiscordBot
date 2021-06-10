@@ -5,16 +5,13 @@ import asyncio
 import datetime
 import os
 import random
-import sys
 import time
-import traceback
 import urllib.request
 from math import *
 
 import async_google_trans_new
 import discord
 import matplotlib.pyplot as plt
-import psutil
 import yahoo_finance_async as yf
 from bs4 import BeautifulSoup
 from discord.ext import commands

@@ -215,7 +215,7 @@ class Fun(commands.Cog):
                 "High chance of no",
                 "I don't think it is a yes...",
                 "Sources point to no",
-                "Uhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh no.",
+                "Uhhhh, no.",
                 "Nope, nada, and nah.",
             ]
             await ctx.send(random.choice(resultNo))

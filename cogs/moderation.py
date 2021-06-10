@@ -165,13 +165,9 @@ class Moderation(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(ban_members=True)
-    async def softban(
-        self, ctx, user: discord.Member, duration: TimeConverter, *, reason="No reason"
-    ):
+    async def ban(self, ctx, user: discord.Member, duration: TimeConverter, *, reason="No reason"):
         """Temporarly bans the user. (Needs Ban Members permissions)
         Example: u.ban @JoeMama#6969 2 hr Reason (Bans user for 2 hours)
-
-        Fun Fact: Perm ban is not permanent. It is equal to 1 quadrillion years. But technically permanent.
         """
         if duration < 30:
             await ctx.send("Duration must be longer than 30 seconds.")
@@ -208,7 +204,7 @@ class Moderation(commands.Cog):
     @commands.command()
     @commands.has_permissions(ban_members=True)
     async def hardban(self, ctx, user: discord.Member, *, reason="No reason"):
-        """Bans the user. (Needs Ban Members permissions)
+        """Bans the user permanently. (Needs Ban Members permissions)
         Example: u.ban @JoeMama#6969 Reason"""
 
         banlisting = {
