@@ -6,21 +6,7 @@ import string
 import discord
 import pymongo
 from discord.ext import commands, tasks
-from dotenv import load_dotenv
 from captcha.image import ImageCaptcha
-
-load_dotenv()
-
-MONGO_PASS = os.getenv("MONGO_PASS")
-myclient = pymongo.MongoClient(
-    "mongodb+srv://queroscode:"
-    + MONGO_PASS
-    + "@querosdatabase.rm7rk.mongodb.net/data?retryWrites=true&w=majority"
-)
-mydb = myclient["data"]
-modcol = mydb["moderation"]
-configcol = mydb["configs"]
-balcol = mydb["balances"]
 
 
 class Configuration(commands.Cog):
@@ -28,6 +14,8 @@ class Configuration(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.configcol = self.bot.mongodatabase["configuration"]
+
 
     @commands.command()
     @commands.has_permissions(manage_guild=True)
@@ -38,14 +26,14 @@ class Configuration(commands.Cog):
             return
 
         if yN == "off":
-            logging = configcol.find(
+            logging = self.configcol.find(
                 {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
             )
             listcmd = []
             for i in logging:
                 listcmd.extend(i["commands"])
             listcmd.append(cmd)
-            configcol.update_one(
+            self.configcol.update_one(
                 {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]},
                 {
                     "$set": {
@@ -59,14 +47,14 @@ class Configuration(commands.Cog):
             await ctx.send(f"Added **{cmd}** to off list.")
 
         if yN == "on":
-            logging = configcol.find(
+            logging = self.configcol.find(
                 {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]}
             )
             for i in logging:
                 listcmd = []
                 listcmd.extend(i["commands"])
             listcmd.remove(cmd)
-            configcol.update_one(
+            self.configcol.update_one(
                 {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]},
                 {
                     "$set": {
@@ -87,14 +75,14 @@ class Configuration(commands.Cog):
             await ctx.send("Please choose a valid level, on or off.")
             return
         if yN == "off":
-            logging = configcol.find(
+            logging = self.configcol.find(
                 {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
             )
             channels = []
             for i in logging:
                 channels.extend(i["channels"])
             channels.append(channel.id)
-            configcol.update_one(
+            self.configcol.update_one(
                 {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]},
                 {
                     "$set": {
@@ -108,14 +96,14 @@ class Configuration(commands.Cog):
             await ctx.send(f"Added **{channel}** to off list.")
 
         if yN == "on":
-            logging = configcol.find(
+            logging = self.configcol.find(
                 {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]}
             )
             for i in logging:
                 channels = []
                 channels.extend(i["channels"])
             channels.remove(channel.id)
-            configcol.update_one(
+            self.configcol.update_one(
                 {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]},
                 {
                     "$set": {
@@ -128,7 +116,6 @@ class Configuration(commands.Cog):
             )
             await ctx.send(f"Removed **{channel}** from off list.")
 
-   
     @commands.command()
     @commands.has_permissions(manage_guild=True)
     async def captchaconfig(self, ctx, toggle: str):
@@ -137,10 +124,10 @@ class Configuration(commands.Cog):
             await ctx.send("Choose a valid option, on or off")
             return
         if toggle == "off":
-            logging = configcol.find(
+            logging = self.configcol.find(
                 {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "captcha"}]}
             )
-            configcol.update_one(
+            self.configcol.update_one(
                 {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "captcha"}]},
                 {
                     "$set": {
@@ -154,10 +141,10 @@ class Configuration(commands.Cog):
             await ctx.send(f"Disabled captcha.")
 
         if toggle == "on":
-            logging = configcol.find(
+            logging = self.configcol.find(
                 {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "captcha"}]}
             )
-            configcol.update_one(
+            self.configcol.update_one(
                 {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "captcha"}]},
                 {
                     "$set": {
@@ -170,9 +157,11 @@ class Configuration(commands.Cog):
             )
             await ctx.send("Enabled captcha. Users will need to enable DMs and complete captcha to get the Captcha Verified role. Make sure to give the everyone role no permission to send messages.")
 
+  
+
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        log = configcol.find(
+        log = self.configcol.find(
             {"$and": [{"guild": member.guild.id}, {"cfg_type": "captcha"}]}
         )
         capStat = 'off'
@@ -180,6 +169,28 @@ class Configuration(commands.Cog):
             capStat = i['status']
         if capStat == 'off':
             return
+
+        if discord.utils.get(member.guild.roles, name="Captcha Verified"):
+            role = discord.utils.get(member.guild.roles, name="Captcha Verified")
+
+            await member.add_roles(role)
+
+            for channel in member.guild.channels:
+                await channel.set_permissions(role, send_messages=True, view_channel=True)
+                await channel.set_permissions(member.guild.default_role, view_channel=False)
+
+        else:
+            perms = discord.Permissions(send_messages=True, view_channel=True)
+            await member.guild.create_role(name="Captcha Verified", permissions=perms)
+
+            role = discord.utils.get(member.guild.roles, name="Captcha Verified")
+            await role.edit(position=1)
+            await member.add_roles(role)
+
+            for channel in member.guild.channels:
+                await channel.set_permissions(role, send_messages=True, view_channel=True)
+                await channel.set_permissions(member.guild.default_role, view_channel=False)
+
         msg = await member.send(f"Hey there {member}, we just need to do one little thing to make sure you're a human and not anything malicious... Please complete this captcha (rejoin to regenerate a captcha):")
         image = ImageCaptcha()
         captchaAMT = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
@@ -193,24 +204,6 @@ class Configuration(commands.Cog):
         await self.bot.wait_for('message', check=check)
         await member.send("Captcha verified. Giving you access...")
 
-        if discord.utils.get(member.guild.roles, name="Captcha Verified"):
-            role = discord.utils.get(member.guild.roles, name="Captcha Verified")
-
-            await member.add_roles(role)
-
-            for channel in member.guild.channels:
-                await channel.set_permissions(role, send_messages=True)
-
-        else:
-            perms = discord.Permissions(send_messages=True)
-            await member.guild.create_role(name="Captcha Verified", permissions=perms)
-
-            role = discord.utils.get(member.guild.roles, name="Captcha Verified")
-            await role.edit(position=1)
-            await member.add_roles(role)
-
-            for channel in member.guild.channels:
-                await channel.set_permissions(role, send_messages=True)
 
 
 # setups command.  command is needed, make sure to use cogs.[name of file]

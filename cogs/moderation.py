@@ -253,9 +253,9 @@ class Moderation(commands.Cog):
         except BaseException:
             await ctx.send("Couldn't DM the user. Oh well.")
 
-    @commands.command(aliases=["purge", "del", "delete"])
+    @commands.command()
     @commands.has_permissions(manage_messages=True)
-    async def msgdel(self, ctx, amt: int):
+    async def purge(self, ctx, amt: int):
         """Deletes messages (Max 200, needs Manage Messages permissions)"""
         if amt > 200:
             await ctx.send(
@@ -271,9 +271,7 @@ class Moderation(commands.Cog):
 
     @commands.command()
     @commands.has_guild_permissions(mute_members=True)
-    async def vcmute(
-        self, ctx, user: discord.Member, duration: TimeConverter, *, reason="No reason"
-    ):
+    async def vcmute(self, ctx, user: discord.Member, duration: TimeConverter, *, reason="No reason"):
         """Temp mutes a user in vc (Needs Mute Members permissions)"""
         if duration < 30:
             await ctx.send("Duration must be longer than 30 seconds.")
@@ -412,10 +410,9 @@ class Moderation(commands.Cog):
         """Kicks a user in voice channel. (Needs Move Members permissions)"""
         await user.edit(voice_channel=None)
 
-    @commands.command(aliases=["temptxtmute", "softtxtmute", "softtextmute", "temptextmute"])
+    @commands.command()
     @commands.has_permissions(manage_roles=True)
-    async def mute(
-            self, ctx, user: discord.Member, duration: TimeConverter, *, reason="No reason"):
+    async def mute(self, ctx, user: discord.Member, duration: TimeConverter, *, reason="No reason"):
         """Temp mutes a user in text channels. (Needs Manage Roles permissions)"""
 
         if discord.utils.get(ctx.guild.roles, name="Muted"):
@@ -461,9 +458,7 @@ class Moderation(commands.Cog):
             await ctx.send("Couldn't DM the user. Oh well.")
         self.modcol.insert_one(txtmutelisting)
 
-    @commands.command(
-        aliases=["permtxtmute", "hardtxtmute", "hardtextmute", "permtextmute"]
-    )
+    @commands.command()
     @commands.has_permissions(manage_roles=True)
     async def hardmute(self, ctx, user: discord.Member, *, reason="No reason"):
         """Perm mutes a user in text channels. (Needs Manage Roles permissions)"""

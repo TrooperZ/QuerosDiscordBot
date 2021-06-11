@@ -70,8 +70,7 @@ async def global_cmd_check(ctx):
     cmds = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": "cmdsoff"}]})
     cmdsList = ["0"]
     for i in cmds:
-        cmdOff = i["commands"]
-        cmdsList.extend(cmdOff)
+        cmdsList.extend(i["commands"])
         if ctx.invoked_with in cmdsList:
             return False
     return True
@@ -80,8 +79,7 @@ async def global_cmd_check(ctx):
     channels = configcol.find({"$and": [{"guild": ctx.guild.id}, {"cfg_type": "channeloff"}]})
 
     for i in channels:
-        channeloff = i["channels"]
-        channelList.extend(channeloff)
+        channelList.extend(i["channels"])
         if ctx.message.channel.id in channelList:
             return
 

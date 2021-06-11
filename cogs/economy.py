@@ -13,7 +13,6 @@ class Economy(commands.Cog):
         # Initalizes bot.
         self.bot = bot
         self.balcol = self.bot.mongodatabase["balances"]
-        self.configcol = self.bot.mongodatabase["configuration"]
 
     @commands.command()
     @commands.cooldown(rate=1, per=20.0, type=commands.BucketType.user)
