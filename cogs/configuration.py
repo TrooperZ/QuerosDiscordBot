@@ -138,6 +138,11 @@ class Configuration(commands.Cog):
                 },
                 upsert=True,
             )
+            role = discord.utils.get(ctx.guild.roles, name="Captcha Verified")
+
+            for channel in member.guild.channels:
+                await channel.set_permissions(role, send_messages=True, view_channel=True)
+                await channel.set_permissions(ctx.guild.default_role, view_channel=True, send_messages=True)
             await ctx.send(f"Disabled captcha.")
 
         if toggle == "on":
@@ -155,9 +160,45 @@ class Configuration(commands.Cog):
                 },
                 upsert=True,
             )
+            perms = discord.Permissions(send_messages=True, view_channel=True)
+            await ctx.guild.create_role(name="Captcha Verified", permissions=perms)
+
+            role = discord.utils.get(ctx.guild.roles, name="Captcha Verified")
+
+            for channel in member.guild.channels:
+                await channel.set_permissions(role, send_messages=True, view_channel=True)
+                await channel.set_permissions(ctx.guild.default_role, view_channel=False)
+
             await ctx.send("Enabled captcha. Users will need to enable DMs and complete captcha to get the Captcha Verified role. Make sure to give the everyone role no permission to send messages.")
 
-  
+
+    @commands.command()
+    @commands.has_permissions(manage_guild=True)
+    async def profanitytext(self, ctx, mode, word, channel="all", location="any", punishment="none", punishdur="none"):
+        if mode != "add" or mode != "remove":
+            await ctx.send("Please set mode to `add` or `remove`")
+            return
+
+        log = self.configcol.find(
+            {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "profanity"}]}
+        )
+
+        if mode == "add":
+            itemlist = ["0"]
+            for i in log:
+                itemlist.extend(i["words"])
+            itemlist.extend((word, channel, punishment, punishdur))
+
+            self.configcol.update_one(
+                {"$and": [{"guild": ctx.guild.id}, {"cfg_type": "profanity"}]},
+                {
+                    "$set": {
+                        "cfg_type": "profanity",
+                        "guild": ctx.guild.id,
+                        "words": itemlist,
+                    }
+                }, upsert=True)
+
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -170,26 +211,6 @@ class Configuration(commands.Cog):
         if capStat == 'off':
             return
 
-        if discord.utils.get(member.guild.roles, name="Captcha Verified"):
-            role = discord.utils.get(member.guild.roles, name="Captcha Verified")
-
-            await member.add_roles(role)
-
-            for channel in member.guild.channels:
-                await channel.set_permissions(role, send_messages=True, view_channel=True)
-                await channel.set_permissions(member.guild.default_role, view_channel=False)
-
-        else:
-            perms = discord.Permissions(send_messages=True, view_channel=True)
-            await member.guild.create_role(name="Captcha Verified", permissions=perms)
-
-            role = discord.utils.get(member.guild.roles, name="Captcha Verified")
-            await role.edit(position=1)
-            await member.add_roles(role)
-
-            for channel in member.guild.channels:
-                await channel.set_permissions(role, send_messages=True, view_channel=True)
-                await channel.set_permissions(member.guild.default_role, view_channel=False)
 
         msg = await member.send(f"Hey there {member}, we just need to do one little thing to make sure you're a human and not anything malicious... Please complete this captcha (rejoin to regenerate a captcha):")
         image = ImageCaptcha()
@@ -202,6 +223,9 @@ class Configuration(commands.Cog):
             return m.content == captchaAMT and m.guild is None
 
         await self.bot.wait_for('message', check=check)
+        role = discord.utils.get(member.guild.roles, name="Captcha Verified")
+
+        await member.add_roles(role)
         await member.send("Captcha verified. Giving you access...")
 
 
