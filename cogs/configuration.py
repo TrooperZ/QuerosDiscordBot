@@ -165,7 +165,7 @@ class Configuration(commands.Cog):
 
             role = discord.utils.get(ctx.guild.roles, name="Captcha Verified")
 
-            for channel in member.guild.channels:
+            for channel in ctx.guild.channels:
                 await channel.set_permissions(role, send_messages=True, view_channel=True)
                 await channel.set_permissions(ctx.guild.default_role, view_channel=False)
 
