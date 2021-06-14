@@ -138,7 +138,10 @@ class Configuration(commands.Cog):
                 },
                 upsert=True,
             )
-            role = discord.utils.get(ctx.guild.roles, name="Captcha Verified")
+            if role != discord.utils.get(ctx.guild.roles, name="Captcha Verified"):
+                 await channel.set_permissions(ctx.guild.default_role, view_channel=True, send_messages=True)
+                 await ctx.send("Notice: No Captcha Verified found, disabling all other features.")
+                 return
 
             for channel in member.guild.channels:
                 await channel.set_permissions(role, send_messages=True, view_channel=True)
@@ -161,8 +164,11 @@ class Configuration(commands.Cog):
                 upsert=True,
             )
             perms = discord.Permissions(send_messages=True, view_channel=True)
-            await ctx.guild.create_role(name="Captcha Verified", permissions=perms)
 
+            if role == discord.utils.get(ctx.guild.roles, name="Captcha Verified"):
+                pass
+            else:
+                await ctx.guild.create_role(name="Captcha Verified", permissions=perms)
             role = discord.utils.get(ctx.guild.roles, name="Captcha Verified")
 
             for channel in ctx.guild.channels:
