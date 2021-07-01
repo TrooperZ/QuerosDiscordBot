@@ -1,5 +1,14 @@
 # QuerosDiscordBot
 
+
+**QUEROS IS DEAD!!!** It's been a long and fun run but sadly we have stalled. Thanks to everyone who supported me. I will be bringing the bot offline soon, and this repo will stay dormant. Who knows, queros might make a comeback!
+
+
+https://coolors.co/99ffcf-0055cc-00bcf5-d4e2fa-2c2f33 pallete
+
+
+
+
 Add the bot [here](https://discord.com/oauth2/authorize?client_id=760856635425554492&permissions=2146954871&scope=bot)
 
 Visit the website [here](https://queros.live/)
