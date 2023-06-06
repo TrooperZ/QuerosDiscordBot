@@ -1,7 +1,9 @@
 # QuerosDiscordBot
 
 
-**QUEROS IS DEAD!!!** It's been a long and fun run but sadly we have stalled. Thanks to everyone who supported me. I will be bringing the bot offline soon, and this repo will stay dormant. Who knows, queros might make a comeback!
+**QUEROS IS DEAD!!!** It's been a long and fun run but sadly we have stalled. With the dominant space of popular bots and the rapid changes to Discord's API, I couldn't put enough time into the bot to make the changes. Thanks to everyone who supported me. I will be bringing the bot offline soon, and this repo will stay dormant.
+
+I may make another bot if I have enough time.
 
 
 https://coolors.co/99ffcf-0055cc-00bcf5-d4e2fa-2c2f33 pallete
@@ -9,9 +11,9 @@ https://coolors.co/99ffcf-0055cc-00bcf5-d4e2fa-2c2f33 pallete
 
 
 
-Add the bot [here](https://discord.com/oauth2/authorize?client_id=760856635425554492&permissions=2146954871&scope=bot)
+Add the bot [here](https://discord.com/oauth2/authorize?client_id=760856635425554492&permissions=2146954871&scope=bot) (offline)
 
-Visit the website [here](https://queros.live/)
+Visit the website [here](https://queros.live/) (offline) 
 
 ## What is Queros?
 Queros (pronounced like kue-ros) is a Discord bot written in Python designed with moderation features, utillity, music, and other fun commands! 
