@@ -1,7 +1,7 @@
 # QuerosDiscordBot
 
 
-**QUEROS IS DEAD!!!** It's been a long and fun run but sadly we have stalled. With the dominant space of popular bots and the rapid changes to Discord's API, I couldn't put enough time into the bot to make the changes. Thanks to everyone who supported me. I will be bringing the bot offline soon, and this repo will stay dormant.
+**QUEROS IS DEAD!!!** It's been a long and fun run but sadly we have stalled. With the dominant space of popular bots and the rapid changes to Discord's API, I couldn't put enough time into the bot to make the changes. Thanks to everyone who supported me. I will bring the bot offline soon; this repo will stay dormant.
 
 I may make another bot if I have enough time.
 
@@ -16,17 +16,17 @@ Add the bot [here](https://discord.com/oauth2/authorize?client_id=76085663542555
 Visit the website [here](https://queros.live/) (offline) 
 
 ## What is Queros?
-Queros (pronounced like kue-ros) is a Discord bot written in Python designed with moderation features, utillity, music, and other fun commands! 
+Queros (pronounced like kue-ros) is a Discord bot written in Python designed with moderation features, utility, music, and other fun commands! 
 
 
 ### Moderation:
 
 Queros comes equipped with basic commands for moderation. It has temp infractions, ban, text mute, vc mute, kick, warn, and infraction logging. 
 
-Queros has an toggleble channel and command feature to restrict some channels and commands from being used. 
+Queros has a toggleable channel and command feature to restrict some channels and commands from being used. 
 
 
-### Utillity: 
+### Utility: 
 
 Queros can do many things, translate text, calculate simple equations, google stuff up, and more will be implemented.
 
@@ -38,10 +38,10 @@ This bot has a lot of fun commands. You can manipulate images and run funny comm
 
 ### Music: 
 
-Queros has a simple music feature, allowing you to play, pause, shuffle, loop, etc. The bot uses music from youtube to play, and it supports playlists. 
+Queros has a simple music feature, allowing you to play, pause, shuffle, loop, etc. The bot uses music from YouTube to play, and it supports playlists. 
 
-### How to get premium?
-Message me on Discord or go on the support server and request your server to have premium status. You must pay me 5 dollars worth of crypto on either XMR (Monero) or ETH (Ethereum) and supply me with the server ID (Right click server icon, copy id) and payment proof. I will enable premium on your server within 1-5 days.
+### How to get a premium?
+Message me on Discord or go on the support server and request your server to have premium status. You must pay me 5 dollars worth of crypto on either XMR (Monero) or ETH (Ethereum) and supply me with the server ID (Right-click the server icon, copy the id) and payment proof. I will enable premium on your server within 1-5 days.
 
 **Have any questions?**
 
